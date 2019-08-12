@@ -1354,6 +1354,11 @@ array-filter@~0.0.0:
   resolved "https://registry.npm.taobao.org/array-filter/download/array-filter-0.0.1.tgz#7da8cf2e26628ed732803581fd21f67cacd2eeec"
   integrity sha1-fajPLiZijtcygDWB/SH2fKzS7uw=
 
+array-find-index@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/array-find-index/-/array-find-index-1.0.2.tgz#df010aa1287e164bbda6f9723b0a96a1ec4187a1"
+  integrity sha1-3wEKoSh+Fku9pvlyOwqWoexBh6E=
+
 array-flatten@1.1.1:
   version "1.1.1"
   resolved "https://registry.npm.taobao.org/array-flatten/download/array-flatten-1.1.1.tgz#9a5f699051b1e7073328f2a008968b64ea2955d2"
@@ -2735,10 +2740,10 @@ electron-to-chromium@^1.3.191:
   resolved "https://registry.npm.taobao.org/electron-to-chromium/download/electron-to-chromium-1.3.194.tgz#a96452a96d4539131957aade9f634a45721f2819"
   integrity sha1-qWRSqW1FORMZV6ren2NKRXIfKBk=
 
-element-ui@^2.4.11:
-  version "2.10.1"
-  resolved "https://registry.npm.taobao.org/element-ui/download/element-ui-2.10.1.tgz?cache=0&sync_timestamp=1562053824530&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Felement-ui%2Fdownload%2Felement-ui-2.10.1.tgz#1011016e50e76f5dae6fbf9c86e53b6e53fcb9eb"
-  integrity sha1-EBEBblDnb12ub7+chuU7blP8ues=
+element-ui@^2.11.1:
+  version "2.11.1"
+  resolved "https://registry.yarnpkg.com/element-ui/-/element-ui-2.11.1.tgz#2b67f9eee3eda2e6884873c1c589cbe30d9a9d60"
+  integrity sha512-PACNMHPWqm+/Wc2f/q93pLNzbNyVbpMCXCrYe81czengSWj7IBku7F3zccybkxtWn5qdCmMDBCpG5BzGJL4rKA==
   dependencies:
     async-validator "~1.8.1"
     babel-helper-vue-jsx-merge-props "^2.0.0"
@@ -4386,6 +4391,15 @@ minizlib@^1.2.1:
   dependencies:
     minipass "^2.2.1"
 
+mint-ui@^2.2.13:
+  version "2.2.13"
+  resolved "https://registry.yarnpkg.com/mint-ui/-/mint-ui-2.2.13.tgz#856a2cba9608c6ecf21f0e521ce89ed8ddfe33d3"
+  integrity sha512-Xz1SFagHSzKOprwQv3fcekXT5RJvhh939zwZHcWeazk1OJrCjsD4I2qm49AEUCfT1AoYzC+rsZIwGP/J6LwVVw==
+  dependencies:
+    array-find-index "^1.0.2"
+    raf.js "0.0.4"
+    vue-lazyload "^1.0.1"
+
 mississippi@^3.0.0:
   version "3.0.0"
   resolved "https://registry.npm.taobao.org/mississippi/download/mississippi-3.0.0.tgz#ea0a3291f97e0b5e8776b363d5f0a12d94c67022"
@@ -5784,6 +5798,11 @@ querystring@0.2.0, querystring@^0.2.0:
   resolved "https://registry.npm.taobao.org/querystring/download/querystring-0.2.0.tgz#b209849203bb25df820da756e747005878521620"
   integrity sha1-sgmEkgO7Jd+CDadW50cAWHhSFiA=
 
+raf.js@0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/raf.js/-/raf.js-0.0.4.tgz#f15af445d241b27fa7131a57450b67ef9c402fec"
+  integrity sha1-8Vr0RdJBsn+nExpXRQtn75xAL+w=
+
 randombytes@^2.0.0, randombytes@^2.0.1, randombytes@^2.0.5:
   version "2.1.0"
   resolved "https://registry.npm.taobao.org/randombytes/download/randombytes-2.1.0.tgz#df6f84372f0270dc65cdf6291349ab7a473d4f2a"
@@ -7002,6 +7021,11 @@ vue-hot-reload-api@^2.3.0:
   version "2.3.3"
   resolved "https://registry.npm.taobao.org/vue-hot-reload-api/download/vue-hot-reload-api-2.3.3.tgz#2756f46cb3258054c5f4723de8ae7e87302a1ccf"
   integrity sha1-J1b0bLMlgFTF9HI96K5+hzAqHM8=
+
+vue-lazyload@^1.0.1:
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/vue-lazyload/-/vue-lazyload-1.3.2.tgz#3d6123b6a6c177aef06aa6d3ad7b6c36ce3c25ab"
+  integrity sha512-dBrtZZSsKJktRIYkq55O44X7bCeNsSbjhmDRdjR5C1wSV/TcJnmVyV/9weRLF3ll+dGv0CLTfouSpIOFfSO1MQ==
 
 vue-loader@^15.7.0:
   version "15.7.1"
