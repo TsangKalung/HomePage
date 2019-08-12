@@ -1,0 +1,1 @@
+rsync -rav --exclude='node_modules/*' --exclude='.git/*' --exclude='.nuxt' . root@54.199.211.228:~/zengjialong-homepage/
