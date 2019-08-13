@@ -79,5 +79,6 @@ html {
 }
 a:-webkit-any-link {
   color:#f61971;
+  font-size: bolder;
 }
 </style>

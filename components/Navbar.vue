@@ -4,7 +4,7 @@
     <el-menu class="menu" mode="horizontal" :router="true">
       <el-menu-item index="/">首页</el-menu-item>
       <el-menu-item index="/resume">简历</el-menu-item>
-      <!-- <el-menu-item index="/blog">博客</el-menu-item> -->
+      <el-menu-item index="/blog">博客</el-menu-item>
     </el-menu>
   </div>
 </template>
@@ -39,12 +39,13 @@
   font-size: 1rem;
   font-weight: bold;
 }
-.el-menu--horizontal>.el-menu-item.is-active {
-  color:#3a25ff;
+.el-menu--horizontal > .el-menu-item.is-active {
+  color: #3a25ff;
   border-bottom: solid 3px #3a25ff;
 }
-.el-menu--horizontal .el-menu-item:not(.is-disabled):focus, .el-menu--horizontal .el-menu-item:not(.is-disabled):hover {
-  color:#3a25ff;
+.el-menu--horizontal .el-menu-item:not(.is-disabled):focus,
+.el-menu--horizontal .el-menu-item:not(.is-disabled):hover {
+  color: #3a25ff;
 }
 </style>
 
