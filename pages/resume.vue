@@ -54,35 +54,49 @@ export default {
 <style lang="scss" scoped>
 .header {
   margin-top: 30px;
-  height: 620px;
+  margin-bottom: 200px;
   display: flex;
   flex-direction: column;
   align-items: center;
   align-content: center;
-
   padding: 2.5rem 0 0 0;
+  @media only screen and (max-width: 1280px) {
+    margin-bottom: 160px;
+  }
+  @media only screen and (max-width: 768px) {
+    margin-bottom: 70px;
+  }
 }
 .header--image {
   background-image: url("../static/resume/header.jpg");
   background-position: center center;
   background-size: cover;
   height: 500px;
-  width: 50%;
-  margin-left: 20%;
+  width: 45%;
+  margin-left: 25%;
   z-index: 11;
+  @media only screen and (max-width: 1280px) {
+    width: 80%;
+    margin: 0 10% 0 10%;
+  }
+  @media only screen and (max-width: 768px) {
+    width: 100%;
+    margin: 0;
+    height: 45vh;
+  }
 }
 
 .header--card {
   z-index: 12;
   background-color: white;
   padding: 24px;
-  margin: -380px auto 32px calc(8% + 32px);
-  width: 40%;
-  height: 250px;
+  margin: -380px auto 32px calc(18% + 32px);
+  width: 35%;
+
   h1 {
     font-family: "Cereal Bold";
     font-weight: 700;
-    font-size: 2.5em;
+    font-size: 2.75em;
     letter-spacing: -0.8px;
   }
   h2 {
@@ -91,35 +105,27 @@ export default {
     font-size: 2.25em;
     letter-spacing: -0.8px;
     color: #767676;
-
     margin-bottom: 32px;
+    word-wrap: wrap break-word;
   }
-
-  // @media only screen and (min-width: 768px) {
-  //   margin: -300px 5% 32px auto;
-  //   height: auto;
-  //   h1 {
-  //     font-size: 2.5em;
-  //     letter-spacing: -0.8px;
-  //   }
-  //   h2 {
-  //     font-size: 2.25em;
-  //     letter-spacing: -0.8px;
-  //     margin-bottom: 32px;
-  //   }
-  // }
-  // h1 {
-  //   font-family: "Cereal Bold";
-  //   font-weight: 700;
-  //   font-size: 2em;
-  // }
-  // h2 {
-  //   font-family: "Cereal Light";
-  //   font-weight: 100;
-  //   font-size: 1.75em;
-  //   color: #767676;
-  //   margin-bottom: 10px;
-  // }
+  @media only screen and (max-width: 1280px) {
+    margin: -180px auto 32px calc(18% + 32px);
+    width: 80%;
+    height: 200px;
+    margin: 0;
+  }
+  @media only screen and (max-width: 768px) {
+    width: 100%;
+    height: 200px;
+    margin: 0;
+    h1 {
+      font-size: 2.5em;
+    }
+    h2 {
+      font-size: 1.75em;
+      margin-bottom: 0;
+    }
+  }
 }
 .education:before {
   content: "";

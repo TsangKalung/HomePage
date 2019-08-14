@@ -8,7 +8,8 @@
     <section class="introduction">
       <h1>INTRODUCTION</h1>
       <p class="introduction--text">
-        我是曾家龙（zēng jiā lóng 或 cang4 gaa1 lung4<sup> * 粤语英文转写为Tsang Ka Lung</sup>），就读于北京邮电大学电子信息工程专业（2017年-2021年）。我是一名字体排印、铁路文化和交互设计的爱好者。我曾在微软(Microsoft)和旷视(Megvii)实习过，想了解我的职业技能和实习经历请阅读我的
+        我是曾家龙（zēng jiā lóng 或 cang4 gaa1 lung4
+        <sup>* 粤语英文转写为Tsang Ka Lung</sup>），就读于北京邮电大学电子信息工程专业（2017年-2021年）。我是一名字体排印、铁路文化和交互设计的爱好者。我曾在微软(Microsoft)和旷视(Megvii)实习过，想了解我的职业技能和实习经历请阅读我的
         <a
           href="/resume"
         >简历</a>。
@@ -16,7 +17,7 @@
       <h1>CONTACTS</h1>
       <div class="contact--text">
         <img src="~/static/index/telephone.svg" />
-        <p>Mobile Phone: 188 ❧ 10940355  </p>
+        <p>Mobile Phone: 188 ❧ 10940355</p>
       </div>
       <div class="contact--text">
         <img src="~/static/index/mail.svg" />
@@ -24,7 +25,7 @@
       </div>
       <div class="contact--text">
         <img src="~/static/index/telegram.svg" />
-        <p>Telegram ID: Tsang Kalung   </p>
+        <p>Telegram ID: Tsang Kalung</p>
       </div>
       <div class="contact--wechat">
         <p>Wechat:</p>
@@ -33,11 +34,17 @@
       <h1>SITES</h1>
       <div class="contact--text">
         <img src="~/static/index/github.svg" />
-        <p>GitHub: <a href="https://github.com/TsangKalung">TsangKalung</a>  </p>
+        <p>
+          GitHub:
+          <a href="https://github.com/TsangKalung">TsangKalung</a>
+        </p>
       </div>
       <div class="contact--text">
         <img src="~/static/index/douban.svg" />
-        <p>Douban: <a href="https://www.douban.com/people/Kalung_Tsang/">Tsang Kalung</a></p>
+        <p>
+          Douban:
+          <a href="https://www.douban.com/people/Kalung_Tsang/">Tsang Kalung</a>
+        </p>
       </div>
       <h1>❦</h1>
     </section>
@@ -57,7 +64,7 @@ export default {};
   justify-content: center;
   align-items: center;
   text-align: center;
-}
+ }
 .banner {
   padding-bottom: 5vh;
   @media only screen and (max-width: 768px) {
@@ -65,22 +72,28 @@ export default {};
       width: 100vw;
     }
   }
-
 }
 .banner--name {
   height: 3.5rem;
+  @media only screen and (max-width: 768px) {
+    height: 3rem;
+  }
 }
 .introduction {
   background-color: black;
   color: white;
   width: 100%;
   padding: 4vh 0 5vh 0;
+  
 }
 .introduction--text {
   padding: 10px 25% 10px 25%;
   text-align: left;
   font-size: 20px;
   font-weight: 500;
+  @media only screen and (max-width: 768px) {
+    padding:10px 10% 10px 10%;
+  }
 }
 .contact--text {
   display: flex;
@@ -118,6 +131,10 @@ export default {};
   font-size: 3rem;
   padding-top: 20px;
   padding-bottom: 10px;
+  @media only screen and (max-width: 768px) {
+    font-size: 2.5em;
+  }
+  
 }
 h2 {
   font-size: 2rem;
@@ -125,5 +142,4 @@ h2 {
 sup {
   font-size: 14px;
 }
-
 </style>

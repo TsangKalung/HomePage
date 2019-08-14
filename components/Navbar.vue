@@ -8,15 +8,13 @@
     </el-menu>
     <el-dropdown class="dropdown--menu">
       <span class="el-dropdown-link">
-        下拉菜单
+        更多
         <i class="el-icon-arrow-down el-icon--right"></i>
       </span>
       <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item>黄金糕</el-dropdown-item>
-        <el-dropdown-item>狮子头</el-dropdown-item>
-        <el-dropdown-item>螺蛳粉</el-dropdown-item>
-        <el-dropdown-item disabled>双皮奶</el-dropdown-item>
-        <el-dropdown-item divided>蚵仔煎</el-dropdown-item>
+        <el-dropdown-item index="/">首页</el-dropdown-item>
+        <el-dropdown-item index="/resume">简历</el-dropdown-item>
+        <el-dropdown-item index="/blog">博客</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
   </div>
@@ -75,13 +73,22 @@
   }
   .navbar--logo {
     height: 60px;
-    padding-left: calc(50%-30px);
+    padding-left: 43%;
   }
   .menu {
     display: none;
   }
   .dropdown--menu {
+    color: black;
+    font-weight: bold;
     padding-left: 20%;
+  }
+  .el-dropdown-menu el-popper {
+    color: #3a25ff;
+  }
+  .el-dropdown-menu__item:not(.is-disabled):hover {
+    background-color: #3b25ff81;
+    color: #3a25ff;
   }
 }
 </style>
