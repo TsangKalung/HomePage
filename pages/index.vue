@@ -48,7 +48,7 @@
 export default {};
 </script>
 
-<style>
+<style lang="scss">
 .container {
   margin: 0 auto;
   min-height: 100vh;
@@ -60,6 +60,12 @@ export default {};
 }
 .banner {
   padding-bottom: 5vh;
+  @media only screen and (max-width: 768px) {
+    img {
+      width: 100vw;
+    }
+  }
+
 }
 .banner--name {
   height: 3.5rem;

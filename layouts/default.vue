@@ -20,19 +20,19 @@ import Navbar from "~/components/Navbar.vue";
 import Footer from "~/components/Footer.vue";
 
 export default {
-  mounted() {
-    if (
-      //iPad can see original.
-      navigator.userAgent.match(/Android/i) ||
-      navigator.userAgent.match(/webOS/i) ||
-      navigator.userAgent.match(/iPhone/i) ||
-      navigator.userAgent.match(/iPod/i) ||
-      navigator.userAgent.match(/BlackBerry/i) ||
-      navigator.userAgent.match(/Windows Phone/i)
-    ) {
-      this.$router.push("/mobile");
-    }
-  },
+  // mounted() {
+  //   if (
+  //     //iPad can see original.
+  //     navigator.userAgent.match(/Android/i) ||
+  //     navigator.userAgent.match(/webOS/i) ||
+  //     navigator.userAgent.match(/iPhone/i) ||
+  //     navigator.userAgent.match(/iPod/i) ||
+  //     navigator.userAgent.match(/BlackBerry/i) ||
+  //     navigator.userAgent.match(/Windows Phone/i)
+  //   ) {
+  //     this.$router.push("/mobile");
+  //   }
+  // },
   components: {
     Navbar,
     Footer

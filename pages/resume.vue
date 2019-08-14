@@ -22,8 +22,12 @@
         </div>
         <div class="education--showbar--text">
           <h2>在校项目：</h2>
-          <h2><a href="/resume/">书楼吊堂</a></h2>
-          <h2><a href="/resume/">你的书单</a></h2>
+          <h2>
+            <a href="/resume/">书楼吊堂</a>
+          </h2>
+          <h2>
+            <a href="/resume/">你的书单</a>
+          </h2>
         </div>
       </div>
     </section>
@@ -51,30 +55,30 @@ export default {
 .header {
   margin-top: 30px;
   height: 620px;
-  padding: 2.5rem 0 0 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   align-content: center;
+
+  padding: 2.5rem 0 0 0;
 }
 .header--image {
   background-image: url("../static/resume/header.jpg");
   background-position: center center;
-  /* background-color: #3b25ff57;
-  background-blend-mode: multiply; */
   background-size: cover;
   height: 500px;
   width: 50%;
   margin-left: 20%;
   z-index: 11;
 }
+
 .header--card {
   z-index: 12;
   background-color: white;
+  padding: 24px;
+  margin: -380px auto 32px calc(8% + 32px);
   width: 40%;
   height: 250px;
-  margin: -380px auto 32px calc(8% + 32px);
-  padding: 24px;
   h1 {
     font-family: "Cereal Bold";
     font-weight: 700;
@@ -87,8 +91,35 @@ export default {
     font-size: 2.25em;
     letter-spacing: -0.8px;
     color: #767676;
+
     margin-bottom: 32px;
   }
+
+  // @media only screen and (min-width: 768px) {
+  //   margin: -300px 5% 32px auto;
+  //   height: auto;
+  //   h1 {
+  //     font-size: 2.5em;
+  //     letter-spacing: -0.8px;
+  //   }
+  //   h2 {
+  //     font-size: 2.25em;
+  //     letter-spacing: -0.8px;
+  //     margin-bottom: 32px;
+  //   }
+  // }
+  // h1 {
+  //   font-family: "Cereal Bold";
+  //   font-weight: 700;
+  //   font-size: 2em;
+  // }
+  // h2 {
+  //   font-family: "Cereal Light";
+  //   font-weight: 100;
+  //   font-size: 1.75em;
+  //   color: #767676;
+  //   margin-bottom: 10px;
+  // }
 }
 .education:before {
   content: "";
@@ -104,12 +135,11 @@ export default {
   top: -374px;
 }
 .education {
-  height: 100vh;
   background-color: #3a25ff;
   background-image: url("/resume/education.svg");
   background-position: right center;
   background-repeat: no-repeat;
-  background-size: 80vh;
+  background-size: 800px;
   color: white;
   h1 {
     font-weight: bolder;
