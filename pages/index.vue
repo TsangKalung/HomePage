@@ -64,7 +64,7 @@ export default {};
   justify-content: center;
   align-items: center;
   text-align: center;
- }
+}
 .banner {
   padding-bottom: 5vh;
   @media only screen and (max-width: 768px) {
@@ -84,7 +84,6 @@ export default {};
   color: white;
   width: 100%;
   padding: 4vh 0 5vh 0;
-  
 }
 .introduction--text {
   padding: 10px 25% 10px 25%;
@@ -92,7 +91,7 @@ export default {};
   font-size: 20px;
   font-weight: 500;
   @media only screen and (max-width: 768px) {
-    padding:10px 10% 10px 10%;
+    padding: 10px 10% 10px 10%;
   }
 }
 .contact--text {
@@ -134,7 +133,6 @@ export default {};
   @media only screen and (max-width: 768px) {
     font-size: 2.5em;
   }
-  
 }
 h2 {
   font-size: 2rem;

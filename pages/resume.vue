@@ -31,26 +31,27 @@
         </div>
       </div>
     </section>
+    <div class="after">
+      <img src="/resume/after.svg" />
+    </div>
+    <section class="career">
+      <h1>实习与项目</h1>
+      <h2>微软中国（2017年11月-2018年1月）</h2>
+      <ul>
+        <li>参与新一代</li>
+      </ul>
+      <h2>旷视科技（2019年1月-至今）</h2>
+      <ul>
+        <li>参与新一代</li>
+      </ul>
+    </section>
   </div>
 </template>
+
 <script>
-export default {
-  mounted() {
-    // const tag = document.createElement('script');
-    // tag.src = 'https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.5.7/lottie.min.js'
-    // document.head.appendChild(tag)
-    // window.onload = () => {
-    //   var animation = bodymovin.loadAnimation({
-    //     container: this.$refs.lottie, // Required
-    //     path: "/lottie/office.json", // Required
-    //     renderer: "svg/canvas/html", // Required
-    //     loop: true, // Optional
-    //     autoplay: true, // Optional
-    //   });
-    // };
-  }
-};
+export default {};
 </script>
+
 <style lang="scss" scoped>
 .header {
   margin-top: 30px;
@@ -90,7 +91,7 @@ export default {
   z-index: 12;
   background-color: white;
   padding: 24px;
-  margin: -380px auto 32px calc(18% + 32px);
+  margin: -380px auto 32px calc(15% + 32px);
   width: 35%;
 
   h1 {
@@ -140,6 +141,9 @@ export default {
   width: 100%;
   top: -374px;
 }
+.after {
+  margin-top: -1px;
+}
 .education {
   background-color: #3a25ff;
   background-image: url("/resume/education.svg");
@@ -156,14 +160,46 @@ export default {
     font-size: 1.5rem;
     padding-top: 0.5rem;
   }
+  @media only screen and(max-width: 450px) {
+    background-size: 300px;
+  }
 }
 .education--showbar {
   position: relative;
   top: -300px;
   left: 20%;
+  @media only screen and (max-width: 450px) {
+    left: 10%;
+    h1 {
+      font-size: 2.5rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+    }
+    img {
+      height: 70px;
+    }
+  }
 }
 .education--showbar--text {
   padding-top: 40px;
   padding-left: 10px;
+}
+.career {
+  height: 100vh;
+
+  background-position: right center;
+  background-repeat: no-repeat;
+  background-size: 800px;
+  color: #f61971;
+  h1 {
+    font-weight: bolder;
+    font-size: 4rem;
+    margin-bottom: 50px;
+  }
+  h2 {
+    font-size: 1.5rem;
+    padding-top: 0.5rem;
+  }
 }
 </style>

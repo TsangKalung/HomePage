@@ -6,17 +6,14 @@
       <el-menu-item index="/resume">简历</el-menu-item>
       <el-menu-item index="/blog">博客</el-menu-item>
     </el-menu>
-    <el-dropdown class="dropdown--menu">
-      <span class="el-dropdown-link">
-        更多
-        <i class="el-icon-arrow-down el-icon--right"></i>
-      </span>
-      <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item index="/">首页</el-dropdown-item>
-        <el-dropdown-item index="/resume">简历</el-dropdown-item>
-        <el-dropdown-item index="/blog">博客</el-dropdown-item>
-      </el-dropdown-menu>
-    </el-dropdown>
+    <el-menu class="dropdown--menu" mode="horizontal" :router="true" menu-trigger="click">
+      <el-submenu>
+        <template slot="title">更多</template>
+        <el-menu-item index="/">首页</el-menu-item>
+        <el-menu-item index="/resume">简历</el-menu-item>
+        <el-menu-item index="/blog">博客</el-menu-item>
+      </el-submenu>
+    </el-menu>
   </div>
 </template>
 
@@ -33,15 +30,13 @@
   }
   .navbar--logo {
     height: 60px;
-    padding-left: 20%;
   }
-  .menu {
+  .menu,
+  .dropdown--menu {
     height: 80px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
-    padding-left: 5%;
-    padding-right: 15%;
   }
   .el-menu.el-menu--horizontal {
     border-bottom: solid 3px black;
@@ -73,7 +68,7 @@
   }
   .navbar--logo {
     height: 60px;
-    padding-left: 43%;
+    padding-left: calc(50%-30px);
   }
   .menu {
     display: none;
@@ -81,14 +76,12 @@
   .dropdown--menu {
     color: black;
     font-weight: bold;
-    padding-left: 20%;
+    border-right: none;
+    width: 90px;
   }
-  .el-dropdown-menu el-popper {
-    color: #3a25ff;
-  }
-  .el-dropdown-menu__item:not(.is-disabled):hover {
-    background-color: #3b25ff81;
-    color: #3a25ff;
+  .el-submenu__title {
+    border: none;
+    color: black;
   }
 }
 </style>
