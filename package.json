@@ -15,7 +15,7 @@
     "element-ui": "^2.4.11",
     "express": "^4.16.4",
     "mint-ui": "^2.2.13",
-    "nuxt": "^2.0.0"
+    "nuxt": "^2.14.4"
   },
   "devDependencies": {
     "cz-conventional-changelog": "^3.0.2",
