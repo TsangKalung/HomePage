@@ -77,6 +77,17 @@ const Layout = ({ location, title, children }) => {
           {title}
         </Link>
       </h2>
+      <h3 style={{ marginTop: 10 }}>
+        <Link
+          style={{
+            boxShadow: `none`,
+            color: `inherit`,
+          }}
+          to={"/about-me"}
+        >
+          - about -
+        </Link>
+      </h3>
     </>
   )
 
