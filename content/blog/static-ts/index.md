@@ -18,7 +18,7 @@ comments: true
 
 ## 综述
 
-基于单片机的嵌入式设备通常使用 C 语言进行编程。这类设备正在进入计算机科学教学的课堂，甚至一些中学也开办了相关课程。于是，用于单片机编程的脚本语言（如 JavaScript 和 Python）使用也逐渐增加。
+基于单片机的嵌入式设备通常使用 C 语言进行编程。这类设备如今进入了计算机科学教学的课堂，甚至一些中学也开办了相关的课程。于是，用于单片机编程的脚本语言（如 JavaScript 和 Python）使用也逐渐增加。
 
 我们研发了 Static TypeScript（STS），它是 TypeScript 的一种子集（而 TypeScript 本身是 JavaScript 的超集），还研发了相关的编译/链接工具链，它们全部使用 TypeScript 进行开发并且在浏览器中运行。STS 为实践而设计（特别是实践教学），适合针对小型设备的静态编译。用户编写的 STS 程序将在浏览器中被编译成机器码，并链接预编译的 C++运行时，生成比普通的嵌入式解释器更高效的可执行文件，从而延长电池寿命并可以在 RAM 低达 16kB 的设备上运行（例如 BBC micro:bit）。本论文主要对实现 STS 系统和适用于课堂教学的嵌入式编程平台的技术挑战进行综述。
 
@@ -26,11 +26,11 @@ comments: true
 
 ## 1 简介
 
-近来，课堂上计算机的实物教学不断地发展，鼓励孩子们构建自己的简单的交互嵌入式系统。例如，图 1（a）展示了 BBC micro:bit[1]，它是一种受 Arduino 启发的小型可编程计算机，拥有集成的 5X5 LED 显示点阵、几个传感器和低功耗蓝牙（BLE）无线传输。该设备与 2-15 年首次向英国所有 7 年级学生推出（10 至 11 岁），随后走向全球，迄今为止已经通过 micro:bit 教育基金会（https://microbit.org）发放了四百万个设备。图1（b）则展示了另一个以RGB LED 为特点的教育设备 Adafruit’s Circuit Playground Express (CPX)。
+近来，课堂上计算机的实物教学不断地发展，鼓励孩子们构建自己的简单的交互嵌入式系统。例如，图 1（a）展示了 BBC micro:bit[1]，它是一种受 Arduino 启发的小型可编程计算机，拥有集成的 5X5 LED 显示点阵、几个传感器和低功耗蓝牙（BLE）无线传输。该设备与 2015 年首次向英国所有 7 年级学生推出（10 至 11 岁），随后走向全球，迄今为止已经通过 micro:bit 教育基金会（ https://microbit.org ）发放了四百万个设备。图 1（b）则展示了另一个以 RGB LED 为特点的教育设备 Adafruit’s Circuit Playground Express (CPX)。
 
 ![图1](./1.png)
 
-**图 1** 两个 Cortex-M0 的单片机教育设备：(a) BBC micro:bit 拥有包含 16kB RAM 和 256kB 闪存的 Nordic nRF51822 微控制单元；(b) Adafruit’s Circuit Playground Express (https://adafruit.com/products/3333) 拥有包含 32kb RAM 和 256kB 闪存的 Atmel SAMD21 微控制单元。
+**图 1** 两个 Cortex-M0 的单片机教育设备：(a) BBC micro:bit 拥有包含 16kB RAM 和 256kB 闪存的 Nordic nRF51822 微控制单元；(b) Adafruit’s Circuit Playground Express ( https://adafruit.com/products/3333 ) 拥有包含 32kb RAM 和 256kB 闪存的 Atmel SAMD21 微控制单元。
 
 研究表明在计算机科学教育中使用这样的设备会增加对孩子们的吸引力，尤其是对于女生，还可以增加孩子们和老师们的自信，让课堂教学更加生动[2,16]。
 
@@ -46,15 +46,15 @@ comments: true
 
 **图 2** 三款有 160x120 分辨率彩色屏幕的基于单片机的游戏机，这些开发板使用 ARM 的 Cortex-M4F 核心：ATSAMD51G19（192kB RAM，以 120Mhz 主频运行）和 STM32F401RE（96kB RAM，以 84Mhz 主频运行）。
 
-很不幸的是，这些嵌入式解释器逗比 V8 慢几个数量级（详细对比见第 4 节），影响响应速度和电池寿命。更重要的是，由于内存中的对象表示为动态键值映射（dynamic key-value mappings），因此它们的内存占用量可能是实现同样功能的 C 程序的几倍，这一点严重限制了程序在更低内存的机器上(如 16kB RAM 的 micro:bit 和 32kB RAM 的 CPX)运行的可能性。
+很不幸的是，这些嵌入式解释器都比 V8 慢几个数量级（详细对比见第 4 节），影响响应速度和电池寿命。更重要的是，由于内存中的对象表示为动态键值映射（dynamic key-value mappings），因此它们的内存占用量可能是实现同样功能的 C 程序的几倍，这一点严重限制了程序在更低内存的机器上(如 16kB RAM 的 micro:bit 和 32kB RAM 的 CPX)运行的可能性。
 
 ### 1.1 Static TypeScript
 
 作为上述嵌入式解释器的替代，我们开发了 Static TypeScript（STS），它是 TypeScript 的语法子集[3]，由一个用 TypeScript 编写的编译器支持，该编译器可以生成在 16-256kB RAM 的微控制器上高效运行的机器码。STS 及其编译器和运行时的设计主要着力于解决前文提到的三个挑战。确切来说：
 
 > - STS 削除了 JavaScript 大部分的「糟粕」；受 StrongScript 影响[14],对于静态声明的类，STS 使用名义类型（nominal type），并支持用虚拟函数表的经典技术对类进行高效编译。
-> - STS 工具链是离线运行的，在浏览器第一次加载，而不需要 C/C++编译器。它们用 TypeScript 实现，讲 STS 编译为 ARM Thumb 机器码并在浏览器中将其与预编译好的 C++ 运行时链接————浏览器或许在大多数时候是课堂中唯一可用的运行环境了。
-> - STS 编译器的生成的机器码令人欣喜的高效和紧凑，使我们解锁了一系列应用领域，例如图 2 中所示的低配置设备的游戏编程，它们能够运行全都得益于 STS。
+> - STS 工具链是离线运行的，一旦加载入浏览器，就不再需要 C/C++编译器。它们用 TypeScript 实现，将 STS 编译为 ARM Thumb 机器码并在浏览器中将其与预编译好的 C++ 运行时链接————浏览器或许在大多数时候是课堂中唯一可用的运行环境了。
+> - 令人惊喜的是，STS 编译器生成的机器码高效而紧凑，使得我们解锁了一系列应用领域，例如图 2 中所示的低配置设备的游戏编程，它们能够运行全都得益于 STS 提供的能力。
 
 将 STS 用户程序部署到嵌入式设备不需要安装特别的应用或设备驱动，只需要进入浏览器即可。完成编译的程序以文件下载的形式显示，然后用户将文件传输到显示为 USB 存储器的设备中即可（或者直接通过 WebUSB 协议传输，它是一种即将推出的将网站与物理设备连接的协议）。
 
@@ -62,27 +62,105 @@ STS 简单编译的编译方案（将在第 3 节详述）在一系列小型 Jav
 
 ### 1.2 MakeCode：为教学而生的简单嵌入式开发
 
-STS 是 MakeCode 框架（详情见https://makecode.com；该框架及诸多编译器已按MIT协议开源，请见https://github.com/microsoft/pxt）支持的核心语言。MakeCode支持为单片机设备创造自定义的嵌入式编程实验。每个MakeCode实验（我们一般称其为编辑器（editors），虽然它们也包含了模拟器、API、教程、文档等）通过STS针对特定设备或设备类型进行编程。
+STS 是 MakeCode 框架（详情见 https://makecode.com ；该框架及诸多编译器已按 MIT 协议开源，请见 https://github.com/microsoft/pxt ）支持的核心语言。MakeCode 支持为单片机设备创造自定义的嵌入式编程实验。每个 MakeCode 实验（我们一般称其为编辑器（editors），虽然它们也包含了模拟器、API、教程、文档等）通过 STS 针对特定设备或设备类型进行编程。
 
 大多数 MakeCode 编辑器主要以 Web 应用的形式部署，其中包含了用以开发 STS 程序的功能齐全的文本编辑器，它基于 Monaco（VS Code 使用的编辑器组件）；还包含了基于 Google Blockly 框架的图形化编程界面（注释中的 STS 元数据定义了 STS 的 API 到 Blockly 的映射，MakeCode 会在 Blockly 和 STS 之间进行交互）。
 
-MakeCode 编辑器和原先 BBC micro:bit 和 Adafruit CPX（详情见https://makecode.microbit.org/和https://makecode.adafruit.com/）的编程实验至今已经覆盖了全球的数百万学生和教师。
+MakeCode 编辑器和原先 BBC micro:bit 和 Adafruit CPX（详情见 https://makecode.microbit.org/ 和 https://makecode.adafruit.com/ ）的编程实验至今已经覆盖了全球的数百万学生和教师。
 
-STS 支持包（package）的概念，即 STS、C++、汇编代码文件的集合，并支持把其他的包当做依赖。第三方开发者已经利用这样的能力对 MakeCode 编辑器进行扩展，使之可以支持各种开发板的外接设备（micro:bit 的相关示例见https://makecode.microbit.org/extensions）。值得注意的是，大多数包完全用STS编写从而避免了不安全C/C++的陷阱，这主要得益于STS编译器的高效和底层STS API 对通过数/模针脚（GPIO、PWM、servos）和一些协议（I2C 和 SPI）实现的访问硬件的高可用性。
+STS 支持包（package）的概念，即 STS、C++、汇编代码文件的集合，并支持把其他的包当做依赖。第三方开发者已经利用这样的能力对 MakeCode 编辑器进行扩展，使之可以支持各种开发板的外接设备（micro:bit 的相关示例见 https://makecode.microbit.org/extensions ）。值得注意的是，大多数包完全用 STS 编写从而避免了不安全 C/C++的陷阱，这主要得益于高效的 STS 编译器以及通过数/模针脚（GPIO、PWM、servos）和一些协议（I2C 和 SPI）访问硬件的底层 STS API。
 
-图 3 展示了用来为图 2 中的手持游戏设备进行编程的 MakeCode Arcade 编辑器（事实上，图中编辑器里的 STS 程序就是在三个单片机设备中运行的游戏之一，它是一个简单的平台游戏）。MakeCode Arcade 包含了一个大部分由 STS 编写的游戏引擎，因此对代码运行效率提出了很高的要求，因为要在高帧率下实现令人快活的视觉效果。该游戏引擎包含游戏循环逻辑、事件上下文栈、物理引擎、文字线条绘制等模块以及用于特定游戏的框架（比如，为图中的特定的平台游戏），游戏引擎一共由一万行 STS 代码和少数最基础的 C++ 图像模糊函数组成。该游戏用 Arcade 构建，在浏览器（桌面或移动端）运行，或在不同型号但符合配置要求的单片机上运行（160\*120 像素 16 色屏幕和 100MHz 左右主频、100kB RAM 左右的微控制器）。
+图 3 展示了用来为图 2 中的手持游戏设备进行编程的 MakeCode Arcade 编辑器（事实上，图中编辑器里的 STS 程序就是在三个单片机设备中运行的游戏之一，它是一个简单的平台游戏）。MakeCode Arcade 包含了一个大部分由 STS 编写的游戏引擎，因此对代码运行效率提出了很高的要求，因为要在高帧率下实现令人快活的视觉效果。该游戏引擎包含游戏循环逻辑、事件上下文栈、物理引擎、文字线条绘制等模块以及用于特定游戏的框架（比如，为图中的平台游戏（译者注：platformer games，这是一种游戏类型）），游戏引擎一共由一万行 STS 代码和少数最基础的 C++ 图像模糊函数组成。该游戏用 Arcade 构建，在浏览器（桌面或移动端）运行，或在不同型号但符合配置要求的单片机上运行（160\*120 像素 16 色屏幕和 100MHz 左右主频、100kB RAM 左右的微控制器）。
 
-**图3**
+**图 3** MakeCode Arcade 编辑器。左边的面板是 Arcade 设备的模拟器；中间的面板是编辑器中可用的 API 的目录；右边的面板是 Monaco 编辑器，可用在其中用 STS 代码为平台游戏编程（ https://makecode.com/85409-23773-98992-33605 ）。位于顶部的开关用来在模块可视化编程和 Static TypeScript 编程面板之间切换（由于市场因素，被标记为 JavaScript）。
 
-本文的主要目的是详述了该广泛部署的系统和解决上述课堂教学难题的方法。
+本文的主要目的是详述了该广泛应用的系统和解决上述课堂教学难题的方法。
 
 ## 2 Static TypeScript(STS)
 
 TypeScript[3]是 JavaScript 的渐进式[18]超集。这意味着所有 JavaScript 程序都是 TypeScript 程序并且其类型是可选的、按需添加的，这些类型可以让 IDE 提供更好的支持，也能让大型 JavaScript 程序有更好的错误检测（error checking）。对象类型提供了映射（maps）、函数和类的统一形式。对象类型之间的结构子类型（structural subtyping）定义了可替换性（substitutability）和兼容性检查。经过类型擦除（及较小的语法转换）后生成原始的 JavaScript 程序。
 
+STS 是 TypeScript 的子集，TypeScript 继承了 JavaScript 的一些高度动态化的语法：`with`语句、`eval`表达式、基于原型的集成、类之外的`this`指针、`arguments`关键字、`apply`方法。STS 保留了诸如动态映射（dynamic maps）的特性，但将它们与名义类抽象分开。这样的限制是可以接受的，因为大多数初学者编写的程序都非常简单，而且嵌入式领域的 JavaScript 或 TypeScript 库非常少，所以使用这些被限制的 JavaScript 特性（如猴子补丁，monkey patching）的机会很少。
+
+我们的目标并不是让 STS 支持 TypeScript 的全部功能，而是务实地聆听用户需求，按嵌入式编程所需添加语言特性。
+
+与所有对象类型都是属性包的 TypeScript 相比，STS 在运行时拥有四种不相关的对象类型：
+
+1. *动态映射*类型，它具有命名属性（即字符串索引），能保存任何类型的值
+2. _函数_（闭包）类型
+3. _类_，用以描述类的示例，通过访问每个字段/方法进行高效的运行时子类型检查，对它们进行名义上的处理，后文中会详述
+4. _数组_（集合）类型
+
+某种程度上，STS 与 Java 和 C# 的风味更接近，它们都把类型视作「抽象的守护神」（protectors of abstractions），而不像 JavaScript 那样允许更加自由地处理对象。在 3.4 节的讨论中，运行时类型标签（type tags）用于区分上面列出的不同种类的内置对象类型（以及诸如装箱数字（boxed number）和字符串之类的语言基础构件）。
+
+与 TypeScript 中一样，类型转换不会生成任何代码且不会失败。相反，STS 在字段/方法访问点保护名义上的类抽象。当`x == null`时，`x.f`在 JavaScript 中会导致运行时错误。如果`T`是具有字段`f`的类，并且`x`的动态类型不是`T`的名义子类型，则`(x as T).f`在 STS 中将导致运行时错误.如果`T`是接口，`any`或某种复杂类型（例如，union 或 intersection），则与`x`的动态类型无关，而是根据名称查找该字段。
+
+其他抽象在运行时中也受到保护，正如在 JavaScript 中那样：例如，对非*函数*类型的对象进行函数调用。现在，将属性动态添加到除`map`类型之外的任何其他类型是错误的。我们将来可能会取消对动态 JavaScript 语义的限制，这取决于用户的反馈。迄今为止，在我们的用户社区（教育工作者和开发人员）中还没有收到任何关于这些限制的负面反馈。
+
+STS 基本类型根据 JavaScript 语义进行处理。特别要强调的是，所有的数字类型在理论上都是 IEEE 64 位浮点类型，但也有可能实际使用 31 位带符号标记的整数类型。运算符的实现（例如加法或比较）基于动态值的分支，以遵循 JavaScript 语义，并在汇编中手动实现了整数类型的快速实现。
+
+STS 既是 TypeScript 的语法子集又是语义子集，这意味着，如果程序在 STS 中成功编译，它将具有与等效 TypeScript 程序相同的语义，否则它无法完成编译（？）。
+
+### 2.1 与 C++ 进行交互操作
+
+STS 程序运行在单片机上由 C++、C、汇编实现的运行时里。该运行时实现了语言的基础构件（操作符、集合、类的支持、动态映射等），同样也支持对底层硬件的访问。该运行时能被包集成，相关详情见 2.2 节。
+
+STS 支持调用 C++ 函数，反之，亦可以从 C++ 调用 STS 函数。为了简化这个过程，STS 使用了一直能够简单的代码生成策略，即在 C++ 函数中使用特殊的注释（`//%`）指定那些代码需要导出为 STS，这样的策略还用于导出为 Blockly 代码块（使用注释`//% block`）。构建中有一个步骤是解析 C++代码获取这些特殊的注释，还会收集这些函数的原型（签名），从而在调用它们时可以生成正确的转换。举个转换的例子：
+
+```cpp
+// C++源码:
+namespace control {
+    /** Register an event handler */
+    //% block
+    void onEvent(int eventType, Action handler) {
+        // arrange for pxt::runAction0(handler)
+        // to be called when eventType is triggered
+    }
+}
+```
+
+```ts
+// 生成的TypeScript
+declare namespace control {
+  /** Register an event handler */
+  //% block shim=control::onEvent
+  function onEvent(eventType: number, handler: () => void): void
+}
+```
+
+C++ 的命名空间和函数名直接映射到 STS 对等的代码上，原先的代码文档注释也会对应复制。注释`//% block`指定函数暴露为 Blockly 图形代码块，它也会被复制。还有许多其它可能的注释可以控制等效图形的外观。STS 函数还会有一个附加的`shim`注释，标注对应的 C++ 函数名（某些情况下，STS 声明是用用户编写的，这时候 C++ 函数名不必与 STS 函数名对应）。
+C++ 的类型会映射到 STS 的类型，由于在 STS 中所有数字类型理论上都是双精度的（），所以 C ++ 的`int`类型会映射到 STS 的`number`类型。当 C++ 函数被调用时，STS 编译器会确保被传递的值被转换为整数。其它的 C++ 整数类型（例如`uint16_t`）也用相似的方法被支持。C++的`Action`类型代表对一个闭包的引用，它将和`pxt::runAction0（）`一起被调用。
+
+类方法还没有被直接支持，常规的函数能用于实现对象，例如：
+
+```cpp
+typedef BoxedBuffer *Buffer;
+namespace BufferMethods {
+    //%
+    int getByte(Buffer self, uint32_t i) {
+        return i < self->len ? self->data[i] : 0;
+        }
+}
+```
+
+```ts
+interface Buffer {
+  //% shim=BufferMethods::getByte
+  getByte(i: number)
+}
+```
+
+所有在`BufferMethods`命名空间中的函数都必须将`Buffer`作为第一个参数，并在 STS 这边作为`Buffer`类的成员。当这些成员被调用时，STS 编译器会确认第一个参数不是`null`并且是`Foo`的子类型。这些接口在概念上可以理解为具有不透明表示形式的不可扩展类，即它们不能由常规类实现，并且成员解析是静态的（static）。选择接口语法是因为 TypeScript 允许用新方法在文件之间扩展接口。如果新方法具有上述的`shim = ...`注释，或者指定了使用 TypeScript 而不是 C ++替换函数的模拟注释，那么我们允许此类添加。。这通常只在高级 C++ 包的开发中涉及（见下文）。
+
 ### 2.2 包（Packages）
 
-STS 支持多种输入文件，也支持 TypeScript 的`namespace`语法用以区分作用域
+STS 支持多种输入文件，也支持 TypeScript 的`namespace`语法用以区分作用域。文件不会引入作用域，并且当前不支持 JavaScript 模块。输入文件可以来自一个或多个*包*。其中一个包为主包，可以列出其他包作为依赖关系，而后者又可以列出其他的依赖关系。有多种方法可以指定包的版本，包括内置包、用命令行进行操作时指定文件路径、GitHub 仓库的 URL。使用包时只能用一个版本（否则可能会发生重定义错误）。
+
+MakeCode 编辑器的构建者通常会决定打包一些随编辑器提供的内置包，这些扩展可以通过 GitHub 中的包进一步扩展。 MakeCode Web 应用程序支持将包发布到 GitHub。 因为命名空间独立于文件，所以包很容易扩展现有的命名空间。目前，STS 不对命名空间名称执行检查。
+
+MakeCode 附带了许多编辑器构建器可以附带的包（通用包），它们用以支持各种硬件功能（引脚、按钮、蜂鸣器、屏幕等），以及诸如处理 Spite 的游戏库之类的高级概念。其中一些包是变体，共享界面但具有不同的实现方式（例如，用于不同屏幕的驱动程序）。
+
+外部（GitHub）包通常为其他硬件拓展设备提供支持。用户通常不会一次使用太多外部包，因此我们感到由于没有让命名空间强制不同名而导致名称冲突的风险很低，并且它允许将新的 API 自然地适合现有的名称空间。
 
 ## 3 编译器和运行时
 
@@ -145,6 +223,33 @@ _numops_adds:
 
 ## 4 性能评估
 
+我们在一系列著名的小型性能密集型测试基准中评估了 STS 编译生成的机器码（又可以成为 STS 的虚拟机后端）的性能，并与以下的竞争对手做了对比：
+
+- 一种用 gcc 编译的纯 C 实现，用来做对比实验的基准（baseline）
+- **Duktape 2.3**，一种嵌入式 JavaScript 解释器
+- **IoT.js 1.0**，JerryScript 的嵌入式 JavaScript 解释器
+- **Python 3.6**，寻常、成熟的 Python 解释器
+- **Node.js 11.0**，包含了 V8 这种前沿的 JIT 引擎的运行时
+- **MicroPython 1.9.4**，一种嵌入式 Python 解释器
+
+我们使用三种不同的基于 ARM 的商用嵌入式系统进行测试：
+
+- **GHI Brainpad**，使用 STM32F401RE 芯片, 拥有 96kB RAM、512kB 闪存和主频为 84MHz 的 ARM Cortex-M4F 核心。
+- **Adafruit Pybadge**，使用 ATSAMD51G19 芯片，拥有 192kB RAM、512kB 闪存和主频为 120MHz 的 ARM Cortex-M4F 核心。
+- **树莓派 Zero（Raspberry Pi Zero）**，使用 BCM2835 芯片，拥有 512kB RAM 和恒定主频为 700MHz （关闭动态 CPU 主频调整）的 ARM11 核心。
+
+树莓派可以运行 Node.js，所以超出了我们目标的内存范围，但我们使用它来作为 V8 的性能参考。通常来说，ARM11 核心的内存访问比 M4F 核心（整体 RAM 在性能上与 L1 缓存类似）的访问速度慢。M4F 核心上的 FPU 只是单精度的，所以么有用于基准测试。我们使用了 ARM11 上的 FPU。
+
+Duktape 使用 BCM 上的默认配置进行编译。在 STM 上，使用默认配置会立即耗尽内存，所以我们选用了适用于低内存配置文件（还启用了 fast integer 选项）。我们用的是官方的 ARMv6 Node.js 二进制文件。我们使用了 PiCore Linux 附带的 Python 环境。我们用过。我们使用了 STM32 的官方 MicroPython 二进制文件。
+
+## 4.1 基准测试
+
+我们使用下面的一系列基准测试。我们尝试使用在 TypeScript/JavaScript 和 Python 中对等的代码，然后对比运行时间
+
+## 4.2 STS 和 VM 的性能
+
+图 4 对比了 STS 和其他环境的性能。我们将 C 程序的运行耗时直接用毫秒列出，其他的耗时则以比 C 程序慢多少的差值列出，以表示对 C 的敬意。
+
 ## 5 相关的工作
 
 Safe TypeScript[13]和 StrongScript[14]都通过运行时类型检查支持了完整的 TypeScript 的类型系统。我们的工作最接近 StrongScript，因为 STS 使用类的名义解释（nominal interpretation）进行代码生成，且 STS 运行时会区分动态对象和类对象，分别生成 JavaScript 的`{x=...}`语法和`new C(...)`语法。
@@ -153,7 +258,7 @@ STS 和 StrongScript 也有一些区别，首先，StrongScript 的类型
 
 ## 6 总结
 
-Static TypeScript（STS）填补了嵌入式编译器中一个有趣的空白。STS 的工具链完全由 TypeScript 实现，使之可以在浏览器运行并能为覆盖大部分 TypeScript 功能的子集成成 ARM（Thumb）机器码。STS 利用类的名义类型解释（nominal interpretation）提高编译代码的效率。有赖于 MakeCode，STS 现已广泛运行在许多低 RAM 的设备上。一组对 STS 的小型基准评估表明，STS 生成的代码比各种脚本语言的嵌入式解释器的运行速度要快得多。迄今为止最大的 STS 应用程序是 MakeCode Arcade，其游戏引擎有超过 10,000 行 STS 代码。
+Static TypeScript（STS）填补了嵌入式编译器中有趣的空白。STS 的工具链完全由 TypeScript 实现，使之可以在浏览器运行并能为覆盖大部分 TypeScript 功能的子集成成 ARM（Thumb）机器码。STS 利用类的名义类型解释（nominal interpretation）提高编译代码的效率。有赖于 MakeCode，STS 现已广泛运行在许多低 RAM 的设备上。一组对 STS 的小型基准评估表明，STS 生成的代码比各种脚本语言的嵌入式解释器的运行速度要快得多。迄今为止最大的 STS 应用程序是 MakeCode Arcade，其游戏引擎有超过 10,000 行 STS 代码。
 
 **致谢** 我们要感谢 MakeCode 团队的成员和前成员：Abhijith Chatra、Sam El-Husseini、Caitlin Hennessy、Steve Hodges、Guillaume
 Jenkins、Shannon Kao、Richard Knoll、Jacqueline Russell、Daryl Zuniga。我们还要感谢 Lancaster 大学的 James Devine 和 Joe Finney，他们开发的 CODAL 是 STS 的 C++运行时的一部分。最后，我们还要感谢匿名审稿人的评论，并感谢 Edd Barrett 帮忙润色本文的最终版本。
