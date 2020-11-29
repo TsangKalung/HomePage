@@ -5,7 +5,7 @@ categories: [about]
 comments: false
 ---
 
-My name is Tsang Ka-lung(Cantonese).I am still a ECE student in Beijing University of Posts and Telecommunications.This diary is designed to help me record what I learned every day.
+My name is Tsang Ka-lung(in Cantonese).I am still a ECE student in Beijing University of Posts and Telecommunications.This diary is designed to help me record what I learned every day.
 
 我叫曾家龙，就读于北京邮电大学，主修 ECE。
 
