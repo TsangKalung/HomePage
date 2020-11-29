@@ -217,9 +217,32 @@ _numops_adds:
 
 **字符串（Strings）** 会有四种不同的表示，它们的开头都毁有一个虚函数表（v-table）指针。所有的字符串当前被限制为最大占用 65,535 字节的空间。ASCII 字符串（所有在 0-127 范围内的字符）用长度前缀加 NUL 中止的字符数据表示（其内部仍然可以有 NUL，只是为了方便 C++ 函数使用所以添加最后的 NUL）。较短的 Unicode 字符串使用 UTF-8 的可变长度编码，它们拥有不同的虚函数表。索引方法可以即时解码 UTF-8。
 
-### 3.7 窥孔优化
+### 3.7 窥孔优化（Peep-hole optimizations）
+
+在完成代码生成之后，生成的汇编代码会经历一次简单的窥孔优化。我们会用对生成的代码运行脚本，识别要被优化的特定指令序列，该脚本会识别到 2-3 条指令序列，并按它们出现的次数进行排序，然后对最常出现的指令序列检视是否能进行简化。典型的窥孔优化规则如下：
+
+```assembly
+push {lr}; push {X, ...} -> push {lr, X, ...}
+pop {X, ...}; pop {pc} -> pop {X, ..., pc}
+push {rX}; pop {rX} -> nothing
+push {rX}; pop {rY} -> mov rY, rX
+pop {rX}; push {rX} -> ldr rX, [sp, #0]
+push {rX}; ldr rX, [sp, #0] -> push {rX}
+push {rX}; movs rY, #V; pop {rX} ->
+movs rY, #V (when X != Y)
+```
+
+对于分支，编译器始终会生成一个完全通用但繁琐的指令序列，然后由窥孔优化器简化。以`X`在短跳范围举例：
+
+```assembly
+beq .skip; b X; .skip: -> bne X
+```
+
+事实上，`b`本身也有着范围的限制并且有时候需要使用`bl`来完成。相关的评估请参阅4.3节。
 
 ### 3.8 垃圾回收器
+
+STS运行时拥有一个定制、简洁、精确、紧凑、标记清除（译者注：Mark and Sweep Algorithm，即标记清除算法）的垃圾回收器。
 
 ## 4 性能评估
 
@@ -250,6 +273,18 @@ Duktape 使用 BCM 上的默认配置进行编译。在 STM 上，使用默认�
 
 图 4 对比了 STS 和其他环境的性能。我们将 C 程序的运行耗时直接用毫秒列出，其他的耗时则以比 C 程序慢多少的差值列出，以表示对 C 的敬意。
 
+## 4.3 成员访问（member access）的性能
+
+图 5 展示了各种形式的成员访问（请参阅 3.4 节）的耗时测算，表格的前四行是循环进行对`this`字段访问、具有动态子类型检查的访问、通过接口查找的访问、对动态银蛇对象访问的耗时。
+
+对于函数，本图列举了直接调用、对非虚拟类方法（non-virtual）的调用、对虚拟类方法的调用、对接口的调用。我们也区分了是否在`this`上调用，因为这样调用不需要进行动态类型检查，其他的非接口调用也是这样的。
+
+子类型检查（subtype check）决定了变量的虚拟和非虚拟调用，它的执行方式有细微的不同，而最终对应的性能几乎一致。接口查找不需要类型检查（因为该方法是从调用它的对象的虚函数表中查找的），这让它的速度并没有落后常规调用很多。动态映射查找取决于对象字段的数量，但其它的耗时大多和输入没有关系。
+
+## 4.4 语言基础构造的性能
+
+图 6 展示了各种语言基础构造的循环耗时测算。与图 5 的策略一样，我们为对美中基础构造操作一百万次，减去空循环所消耗的时间，然后将时间转换为主时钟周期进行比较。
+
 ## 5 相关的工作
 
 Safe TypeScript[13]和 StrongScript[14]都通过运行时类型检查支持了完整的 TypeScript 的类型系统。我们的工作最接近 StrongScript，因为 STS 使用类的名义解释（nominal interpretation）进行代码生成，且 STS 运行时会区分动态对象和类对象，分别生成 JavaScript 的`{x=...}`语法和`new C(...)`语法。
@@ -272,5 +307,42 @@ Jenkins、Shannon Kao、Richard Knoll、Jacqueline Russell、Daryl Zuniga。我�
 [3]: Gavin M. Bierman, Martín Abadi, and Mads Torgersen. 2014. Understanding TypeScript. In ECOOP 2014 - Object-Oriented Programming - 28th European Conference, Uppsala, Sweden, July 28 - August 1, 2014.Proceedings. 257–281. https://doi.org/10.1007/978-3-662-44202-9_11
 
 [5]: 尽管我们可以使用 Emscripten 或类似的技术在本地对 C++ 进行编译，但编译工具链、头文件和相关的库可能需要数十兆的下载请求，导致浏览器的离线缓存空间紧张。
+
+[6] Wontae Choi, Satish Chandra, George Necula, and Koushik Sen. 2015.SJS: A type system for JavaScript with fixed object layout. In International Static Analysis Symposium. Springer, 181–198.
+
+[7] James Devine, Joe Finney, Peli de Halleux, Michal Moskal, Thomas Ball,and Steve Hodges. 2018. MakeCode and CODAL: intuitive and efficient
+embedded systems programming for education. In Proceedings of the 19th ACM SIGPLAN/SIGBED International Conference on Languages,Compilers, and Tools for Embedded Systems, LCTES 2018, Philadelphia,PA, USA, June 19-20, 2018. 19–30.
+
+[8] Evgeny Gavrin, Sung-Jae Lee, Ruben Ayrapetyan, and Andrey Shitov.2015. Ultra Lightweight JavaScript Engine for Internet of Things. In SPLASH Companion 2015. 19–20.
+
+[9] Damien George. 2018. MicroPython. http://www.micropython.org.
+
+[10] Isaac Gouy. 2018. The Computer Language Benchmarks Game. https://benchmarksgame-team.pages.debian.net/benchmarksgame/.
+
+[11] Apple Inc. 2018. JetStream Benchmarks 1.1. https://www.browserbench.org/JetStream/in-depth.html.
+
+[12] Adafruit Industries. 2018. CircuitPython. https://github.com/adafruit/circuitpython.
+
+[13] A. Rastogi, N. Swamy, C. Fournet, G. M. Bierman, and P. Vekris. 2015.Safe & Efficient Gradual Typing for TypeScript. In Proceedings of the 42nd Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages. 167–180. http://doi.acm.org/10.1145/2676726.2676971
+
+[14] G. Richards, F. Z. Nardelli, and J. Vitek. 2015. Concrete Types for TypeScript. In 29th European Conference on Object-Oriented Programming,ECOOP 2015. 76–100. https://doi.org/10.4230/LIPIcs.ECOOP.2015.76
+
+[15] Samsung. 2018. JerryScript. http://jerryscript.org
+
+[16] Sue Sentance, Jane Waite, Steve Hodges, Emily MacLeod, and Lucy Yeomans. 2017. "Creating Cool Stuff": Pupils’ Experience of the BBC Micro:Bit. In Proceedings of the 2017 ACM SIGCSE Technical Symposium on Computer Science Education (SIGCSE ’17). ACM, 531–536. https://doi.org/10.1145/3017680.3017749
+
+[17] Manuel Serrano. 2018. JavaScript AOT compilation. In Proceedings of the 14th ACM SIGPLAN International Symposium on Dynamic Languages. ACM, 50–63.
+
+[18] Jeremy G. Siek and Walid Taha. 2007. Gradual Typing for Objects. In ECOOP 2007 - Object-Oriented Programming, 21st European Conference, Berlin, Germany, July 30 - August 3, 2007, Proceedings. 2–27. https://doi.org/10.1007/978-3-540-73589-2_2
+
+[19] Artifex Software. 2018. MuJS. https://mujs.com/.
+
+[20] Cesanta Software. 2018. mJS. https://github.com/cesanta/mjs.
+
+[21] Patrick Soquet. 2017. XS7. https://www.moddable.com/XS7-TC-39.
+
+[22] Sami Vaarala. 2018. DukTape. https://duktape.org/.
+
+[23] Gordon Williams. 2017. Making Things Smart: Easy Embedded JavaScript Programming for Making Everyday Objects into Intelligent Machines. Maker Media.
 
 ---
