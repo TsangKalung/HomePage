@@ -62,6 +62,6 @@
     "serve": "gatsby serve",
     "clean": "gatsby clean",
     "test": "echo \"Write tests!\" && exit 1",
-    "deploy": "gatsby build && gh-pages -d public -b master -r https://$GH_TOKEN@github.com/TsangKalung/TsangKalung.github.io.git"
+    "deploy": "gatsby build && cd public && echo 'zengjialong.com' > CNAME && cd - && gh-pages -d public -b master -r https://$GH_TOKEN@github.com/TsangKalung/TsangKalung.github.io.git"
   }
 }

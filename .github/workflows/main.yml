@@ -23,4 +23,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          npm run deploy && echo 'zengjialong.com' > CNAME
+          npm run deploy
