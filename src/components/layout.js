@@ -65,7 +65,7 @@ const Layout = ({ location, title, children }) => {
           ...scale(1),
           marginBottom: 0,
           marginTop: 0,
-          fontFamily: `Montserrat, sans-serif`,
+          fontFamily: `Futura`,
         }}
       >
         <Link
@@ -78,7 +78,7 @@ const Layout = ({ location, title, children }) => {
           {title}
         </Link>
       </h2>
-      <h3 style={{ marginTop: 10 }}>
+      <h3 style={{ marginTop: 10, fontFamily: `Futura`, fontWeight: 400 }}>
         <Link
           style={{
             boxShadow: `none`,
