@@ -5,7 +5,7 @@ categories: [about]
 comments: false
 ---
 
-Tsang Ka-lung(in Cantonese) is a ECE student in Beijing University of Posts and Telecommunications.This weblog is his tech-dairy.
+Tsang Ka-Lung(in Cantonese) is a ECE student in Beijing University of Posts and Telecommunications.This weblog is his tech-dairy.
 
 ---
 

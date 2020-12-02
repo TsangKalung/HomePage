@@ -59,7 +59,7 @@ const Layout = ({ location, title, children }) => {
 
   const header = (
     <>
-      {toggle}
+      {/* {toggle} */}
       <h2
         style={{
           ...scale(1),

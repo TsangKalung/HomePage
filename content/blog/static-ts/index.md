@@ -349,4 +349,3 @@ embedded systems programming for education. In Proceedings of the 19th ACM SIGPL
 
 [23] Gordon Williams. 2017. Making Things Smart: Easy Embedded JavaScript Programming for Making Everyday Objects into Intelligent Machines. Maker Media.
 
----
