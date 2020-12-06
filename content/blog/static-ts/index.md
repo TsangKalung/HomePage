@@ -1,12 +1,12 @@
 ---
-title: 【WIP】译文：Static TypeScript，TypeScript 的一种静态编译器实现
+title: 译文：Static TypeScript，TypeScript 的一种静态编译器实现
 date: "2020-11-23T07:26:03.284Z"
 description: "TypeScript 的一种静态编译器实现"
 categories: [code]
 comments: true
 ---
 
-译者声明：本译文获得原作者授权翻译。
+译者声明：本译文获得原作者授权翻译；由 Allen 审校。
 
 作者：
 
@@ -20,15 +20,15 @@ comments: true
 
 基于单片机的嵌入式设备通常使用 C 语言进行编程。这类设备如今进入了计算机科学教学的课堂，甚至一些中学也开办了相关的课程。于是，用于单片机编程的脚本语言（如 JavaScript 和 Python）使用也逐渐增加。
 
-我们研发了 Static TypeScript（STS），它是 TypeScript 的一种子集（而 TypeScript 本身是 JavaScript 的超集），还研发了相关的编译/链接工具链，它们全部使用 TypeScript 进行开发并且在浏览器中运行。STS 为实践而设计（特别是实践教学），适合针对小型设备的静态编译。用户编写的 STS 程序将在浏览器中被编译成机器码，并链接预编译的 C++运行时，生成比普通的嵌入式解释器更高效的可执行文件，从而延长电池寿命并可以在 RAM 低达 16kB 的设备上运行（例如 BBC micro:bit）。本论文主要对实现 STS 系统和适用于课堂教学的嵌入式编程平台的技术挑战进行综述。
+我们研发了 Static TypeScript（STS），它是 TypeScript 的一种子集（而 TypeScript 本身是 JavaScript 的超集），还研发了相关的编译/链接工具链，它们全部使用 TypeScript 进行开发并且在浏览器中运行。STS 为实践开发而设计（特别是实践教学），适合针对小型设备的静态编译。用户开发的 STS 程序将在浏览器中被编译成机器码，并链接预编译的 C++ 运行时，生成比普通的嵌入式解释器更高效的可执行文件，从而延长电池寿命并可以在 RAM 低达 16kB 的设备（例如 BBC micro:bit）上运行。本论文主要对实现 STS 系统和开发适用于课堂教学的嵌入式编程平台的技术挑战进行综述。
 
 **关键词：**JavaScript，TypeScript，编译器，解释器，单片机，虚拟机
 
 ## 1 简介
 
-近来，课堂上计算机的实物教学不断地发展，鼓励孩子们构建自己的简单的交互嵌入式系统。例如，图 1（a）展示了 BBC micro:bit[1]，它是一种受 Arduino 启发的小型可编程计算机，拥有集成的 5X5 LED 显示点阵、几个传感器和低功耗蓝牙（BLE）无线传输。该设备与 2015 年首次向英国所有 7 年级学生推出（10 至 11 岁），随后走向全球，迄今为止已经通过 micro:bit 教育基金会（ https://microbit.org ）发放了四百万个设备。图 1（b）则展示了另一个以 RGB LED 为特点的教育设备 Adafruit’s Circuit Playground Express (CPX)。
+近年来，课堂上计算机的实物教学不断地发展，以鼓励孩子们构建自己的简单的交互嵌入式系统。例如，图 1（a）展示了 BBC micro:bit[1]，它是一种受 Arduino 启发的小型可编程单片机，带有集成的 5X5 LED 显示点阵、几个传感器和低功耗蓝牙（BLE）无线传输。该设备与 2015 年首次向英国所有 7 年级学生推出（10 至 11 岁），随后走向全球，迄今为止 micro:bit 教育基金会（ https://microbit.org ）已经发放了四百万个设备。图 1（b）则展示了另一个以 RGB LED 为特点的教育设备 Adafruit’s Circuit Playground Express (CPX)。
 
-![图1](./1.png)
+![图1](./figure_1.png)
 
 **图 1** 两个 Cortex-M0 的单片机教育设备：(a) BBC micro:bit 拥有包含 16kB RAM 和 256kB 闪存的 Nordic nRF51822 微控制单元；(b) Adafruit’s Circuit Playground Express ( https://adafruit.com/products/3333 ) 拥有包含 32kb RAM 和 256kB 闪存的 Atmel SAMD21 微控制单元。
 
@@ -42,7 +42,7 @@ comments: true
 
 面对这些挑战，有许多流行脚本语言的嵌入式解释器应运而生，例如 JavaScript 的 JerryScript[8,15]、Duktape[22]、Espruino[23]、mJS[20]、MuJS[19]，Python 的 MicroPython[9]及其分支 CircuitPython[12]。这些解释器直接在微控制器上运行，仅依赖从计算机向嵌入式设备传输程序文本；但它们也舍弃了深度优化的 JIT 编译器（如 V8）的一些优势，这类编译器运行需要的内存比单片机的内存要大两个数量级。
 
-![2](./2.png)
+![2](./figure_2.png)
 
 **图 2** 三款有 160x120 分辨率彩色屏幕的基于单片机的游戏机，这些开发板使用 ARM 的 Cortex-M4F 核心：ATSAMD51G19（192kB RAM，以 120Mhz 主频运行）和 STM32F401RE（96kB RAM，以 84Mhz 主频运行）。
 
@@ -52,9 +52,9 @@ comments: true
 
 作为上述嵌入式解释器的替代，我们开发了 Static TypeScript（STS），它是 TypeScript 的语法子集[3]，由一个用 TypeScript 编写的编译器支持，该编译器可以生成在 16-256kB RAM 的微控制器上高效运行的机器码。STS 及其编译器和运行时的设计主要着力于解决前文提到的三个挑战。确切来说：
 
-> - STS 削除了 JavaScript 大部分的「糟粕」；受 StrongScript 影响[14],对于静态声明的类，STS 使用名义类型（nominal type），并支持用虚拟函数表的经典技术对类进行高效编译。
-> - STS 工具链是离线运行的，一旦加载入浏览器，就不再需要 C/C++编译器。它们用 TypeScript 实现，将 STS 编译为 ARM Thumb 机器码并在浏览器中将其与预编译好的 C++ 运行时链接————浏览器或许在大多数时候是课堂中唯一可用的运行环境了。
-> - 令人惊喜的是，STS 编译器生成的机器码高效而紧凑，使得我们解锁了一系列应用领域，例如图 2 中所示的低配置设备的游戏编程，它们能够运行全都得益于 STS 提供的能力。
+- STS 削除了 JavaScript 大部分的「糟粕」；受 StrongScript 影响[14],对于静态声明的类，STS 使用名义类型（nominal type），并支持用虚拟函数表的经典技术对类进行高效编译。
+- STS 工具链是离线运行的，一旦加载入浏览器，就不再需要 C/C++ 编译器。它们用 TypeScript 实现，将 STS 编译为 ARM Thumb 机器码并在浏览器中将其与预编译好的 C++ 运行时链接————浏览器或许在大多数时候是课堂中唯一可用的运行环境了。
+- 令人惊喜的是，STS 编译器生成的机器码高效而紧凑，使得我们解锁了一系列应用领域，例如图 2 中所示的低配置设备的游戏编程，它们能够运行全都得益于 STS 提供的能力。
 
 将 STS 用户程序部署到嵌入式设备不需要安装特别的应用或设备驱动，只需要进入浏览器即可。完成编译的程序以文件下载的形式显示，然后用户将文件传输到显示为 USB 存储器的设备中即可（或者直接通过 WebUSB 协议传输，它是一种即将推出的将网站与物理设备连接的协议）。
 
@@ -62,13 +62,13 @@ STS 简单编译的编译方案（将在第 3 节详述）在一系列小型 Jav
 
 ### 1.2 MakeCode：为教学而生的简单嵌入式开发
 
-STS 是 MakeCode 框架（详情见 https://makecode.com ；该框架及诸多编译器已按 MIT 协议开源，请见 https://github.com/microsoft/pxt ）支持的核心语言。MakeCode 支持为单片机设备创造自定义的嵌入式编程实验。每个 MakeCode 实验（我们一般称其为编辑器（editors），虽然它们也包含了模拟器、API、教程、文档等）通过 STS 针对特定设备或设备类型进行编程。
+STS 是 MakeCode 框架支持的核心语言（详情见 https://makecode.com ；该框架及诸多编辑器已按 MIT 协议开源，请见 https://github.com/microsoft/pxt ）。MakeCode 支持为单片机设备创造自定义的嵌入式编程实验。每个 MakeCode 实验（我们一般称其为编辑器（editors），虽然它们也包含了模拟器、API、教程、文档等）通过 STS 针对特定设备或设备类型进行编程。
 
 大多数 MakeCode 编辑器主要以 Web 应用的形式部署，其中包含了用以开发 STS 程序的功能齐全的文本编辑器，它基于 Monaco（VS Code 使用的编辑器组件）；还包含了基于 Google Blockly 框架的图形化编程界面（注释中的 STS 元数据定义了 STS 的 API 到 Blockly 的映射，MakeCode 会在 Blockly 和 STS 之间进行交互）。
 
 MakeCode 编辑器和原先 BBC micro:bit 和 Adafruit CPX（详情见 https://makecode.microbit.org/ 和 https://makecode.adafruit.com/ ）的编程实验至今已经覆盖了全球的数百万学生和教师。
 
-STS 支持包（package）的概念，即 STS、C++、汇编代码文件的集合，并支持把其他的包当做依赖。第三方开发者已经利用这样的能力对 MakeCode 编辑器进行扩展，使之可以支持各种开发板的外接设备（micro:bit 的相关示例见 https://makecode.microbit.org/extensions ）。值得注意的是，大多数包完全用 STS 编写从而避免了不安全 C/C++的陷阱，这主要得益于高效的 STS 编译器以及通过数/模针脚（GPIO、PWM、servos）和一些协议（I2C 和 SPI）访问硬件的底层 STS API。
+STS 支持包（package）的概念，即 STS、C++、汇编代码文件的集合，并支持把其他的包当做依赖。第三方开发者已经利用这样的能力对 MakeCode 编辑器进行扩展，使之可以支持各种开发板的外接设备（micro:bit 的相关示例见 https://makecode.microbit.org/extensions ）。值得注意的是，大多数包完全用 STS 编写从而避免了不安全 C/C++ 的陷阱，这主要得益于高效的 STS 编译器以及通过数/模针脚（GPIO、PWM、servos）和一些协议（I2C 和 SPI）访问硬件实现的底层 STS API。
 
 图 3 展示了用来为图 2 中的手持游戏设备进行编程的 MakeCode Arcade 编辑器（事实上，图中编辑器里的 STS 程序就是在三个单片机设备中运行的游戏之一，它是一个简单的平台游戏）。MakeCode Arcade 包含了一个大部分由 STS 编写的游戏引擎，因此对代码运行效率提出了很高的要求，因为要在高帧率下实现令人快活的视觉效果。该游戏引擎包含游戏循环逻辑、事件上下文栈、物理引擎、文字线条绘制等模块以及用于特定游戏的框架（比如，为图中的平台游戏（译者注：platformer games，这是一种游戏类型）），游戏引擎一共由一万行 STS 代码和少数最基础的 C++ 图像模糊函数组成。该游戏用 Arcade 构建，在浏览器（桌面或移动端）运行，或在不同型号但符合配置要求的单片机上运行（160\*120 像素 16 色屏幕和 100MHz 左右主频、100kB RAM 左右的微控制器）。
 
@@ -78,11 +78,11 @@ STS 支持包（package）的概念，即 STS、C++、汇编代码文件的集�
 
 ## 2 Static TypeScript(STS)
 
-TypeScript[3]是 JavaScript 的渐进式[18]超集。这意味着所有 JavaScript 程序都是 TypeScript 程序并且其类型是可选的、按需添加的，这些类型可以让 IDE 提供更好的支持，也能让大型 JavaScript 程序有更好的错误检测（error checking）。对象类型提供了映射（maps）、函数和类的统一形式。对象类型之间的结构子类型（structural subtyping）定义了可替换性（substitutability）和兼容性检查。经过类型擦除（及较小的语法转换）后生成原始的 JavaScript 程序。
+TypeScript[3]是 JavaScript 的渐进式[18]超集。这意味着所有 JavaScript 程序都是 TypeScript 程序并且其类型是可选的、按需添加的，这些类型能让 IDE 提供更好的支持，也能让大型 JavaScript 程序有更好的错误检测（error checking）。对象类型提供了映射（maps）、函数和类的统一形式。对象类型之间的结构子类型（structural subtyping）定义了可替换性（substitutability）和兼容性检查。经过类型擦除（及较小的语法转换）后生成原始的 JavaScript 程序。
 
-STS 是 TypeScript 的子集，TypeScript 继承了 JavaScript 的一些高度动态化的语法：`with`语句、`eval`表达式、基于原型的集成、类之外的`this`指针、`arguments`关键字、`apply`方法。STS 保留了诸如动态映射（dynamic maps）的特性，但将它们与名义类抽象分开。这样的限制是可以接受的，因为大多数初学者编写的程序都非常简单，而且嵌入式领域的 JavaScript 或 TypeScript 库非常少，所以使用这些被限制的 JavaScript 特性（如猴子补丁，monkey patching）的机会很少。
+STS 是 TypeScript 的子集，TypeScript 继承了 JavaScript 的一些高度动态化的语法：`with`语句、`eval`表达式、基于原型（prototype）的继承、类之外的`this`指针、`arguments`关键字、`apply`方法。STS 保留了诸如动态映射（dynamic maps）的特性，但将它们与名义类抽象分开。这样的限制是可以接受的，因为大多数初学者编写的程序都非常简单，而且嵌入式领域的 JavaScript 库或 TypeScript 库非常少，所以使用这些被限制的 JavaScript 特性（如猴子补丁，monkey patching）的机会很少。
 
-我们的目标并不是让 STS 支持 TypeScript 的全部功能，而是务实地聆听用户需求，按嵌入式编程所需添加语言特性。
+我们的目标并不是让 STS 支持 TypeScript 的全部功能，而是务实地针对用户需求，按嵌入式编程所需添加语言特性。
 
 与所有对象类型都是属性包的 TypeScript 相比，STS 在运行时拥有四种不相关的对象类型：
 
@@ -91,7 +91,7 @@ STS 是 TypeScript 的子集，TypeScript 继承了 JavaScript 的一些高度�
 3. _类_，用以描述类的示例，通过访问每个字段/方法进行高效的运行时子类型检查，对它们进行名义上的处理，后文中会详述
 4. _数组_（集合）类型
 
-某种程度上，STS 与 Java 和 C# 的风味更接近，它们都把类型视作「抽象的守护神」（protectors of abstractions），而不像 JavaScript 那样允许更加自由地处理对象。在 3.4 节的讨论中，运行时类型标签（type tags）用于区分上面列出的不同种类的内置对象类型（以及诸如装箱数字（boxed number）和字符串之类的语言基础构件）。
+某种程度上，STS 与 Java 或 C# 的风味更接近，它们都把类型视作「抽象的守护神」（protectors of abstractions），而不像 JavaScript 那样允许更自由地处理对象。在 3.4 节的讨论中，运行时类型标签（type tags）用于区分上面列出的不同种类的内置对象类型（以及诸如装箱数字（boxed number）和字符串之类的语言基础构件）。
 
 与 TypeScript 中一样，类型转换不会生成任何代码且不会失败。相反，STS 在字段/方法访问点保护名义上的类抽象。当`x == null`时，`x.f`在 JavaScript 中会导致运行时错误。如果`T`是具有字段`f`的类，并且`x`的动态类型不是`T`的名义子类型，则`(x as T).f`在 STS 中将导致运行时错误。如果`T`是接口、`any`或某种复杂类型（例如，union 或 intersection），则与`x`的动态类型无关，而是根据名称查找该字段。
 
@@ -168,9 +168,9 @@ STS 的编译器和工具链（链接器等）完全使用 TypeScript 编写。�
 
 ### 3.1 编译工具链
 
-TypeScript 源程序由常规 TypeScript 编译器处理，执行包块类型检查在内的语法和语义分析；这个过程产出有类型注释的抽象语法树（AST），然后检查是否有 STS 范围之外的构造（类似`eval`和`arguments`等）。抽象语法树随后会转化为具有语言构造的自定义 IR 用以调用运行时函数。这种 IR 之后回北转换为下列的三种形式之一：
+TypeScript 源程序由常规 TypeScript 编译器处理，执行包括类型检查在内的语法和语义分析；这个过程产出带有类型注释的抽象语法树（AST），然后检查是否有 STS 范围之外的语言构件（类似`eval`和`arguments`等）。抽象语法树随后会转化为具有语言构件的自定义 IR 用以调用运行时函数。这种 IR 之后会被转换为下列的三种形式之一：
 
-1. 继续传递 JavaScript 运行到浏览器中（在单独的 iframe“模拟器”里）。
+1. 继续传递 JavaScript 运行到浏览器中（在单独的 iframe “模拟器”里）。
 
 2. 与预编译的 C++ 运行时链接的 ARM Thumb 机器码，用以在裸机（A 'bare-metal server' is a computer server that is a 'single-tenant physical server'. The term is used nowadays to distinguish it from modern forms of virtualisation and cloud hosting.）硬件和操作系统内部运行。
 
