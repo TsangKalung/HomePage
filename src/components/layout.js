@@ -111,7 +111,7 @@ const Layout = ({ location, title, children }) => {
       </div>
 
       <div className="main-content relative">
-        <main>{children}</main>
+        <main style={{ maxWidth: "calc(100vw - 40px)" }}>{children}</main>
         <Footer />
       </div>
     </div>
