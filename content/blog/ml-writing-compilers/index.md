@@ -1,7 +1,7 @@
 ---
 title: 译文：为什么 ML/OCaml 适用于编译器开发（1998）
 date: "2020-11-17T07:26:03.284Z"
-description: "来自1998年的观点"
+description: "来自1998年的观点。"
 categories: [code]
 comments: true
 ---
