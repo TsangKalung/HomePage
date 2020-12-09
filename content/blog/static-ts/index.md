@@ -6,7 +6,7 @@ categories: [code]
 comments: true
 ---
 
-译者声明：本译文获得原作者授权翻译；由 Allen 审校。
+译者声明：The Chinese translation of this paper has been authorized by the author and is not for profit; 本译文获得原作者授权翻译；由 Allen 审校。
 
 作者：
 
@@ -239,7 +239,7 @@ _numops_adds:
 
 ### 3.6 内置对象（built-in）的表示
 
-**数组（Arrays）** 和 C++标准向量（vector）类似，但有相对保守的增长策略并且不支持稀疏数组（sparse array）。包括范围检查在内的简单数组访问操作用用汇编实现。涉及索引转换和数组增长的情况用 C++ 运行时处理。缓冲区只是连续的内存块，可以通过汇编字节访问器和几个用C++写的工具函数来访问。
+**数组（Arrays）** 和 C++ 标准向量（vector）类似，但有相对保守的增长策略并且不支持稀疏数组（sparse array）。包括范围检查在内的简单数组访问操作用用汇编实现。涉及索引转换和数组增长的情况用 C++ 运行时处理。缓冲区只是连续的内存块，可以通过汇编字节访问器和几个用 C++ 写的工具函数来访问。
 
 **字符串（Strings）** 会有四种不同的表示，它们的开头都会有一个虚函数表（v-table）指针。所有的字符串当前被限制为最大占用 65,535 字节的空间。ASCII 字符串（所有在 0-127 范围内的字符）用长度前缀加 NUL 中止的字符数据表示（其内部仍然可以有 NUL，只是为了方便 C++ 函数使用所以添加最后的 NUL）。较短的 Unicode 字符串使用 UTF-8 的可变长度编码，它们拥有不同的虚函数表。索引方法可以即时解码 UTF-8。
 
@@ -389,7 +389,7 @@ SJS[5,6]是一个相似的系统，但它使用 Java 实现，同时生成的代
 
 ## 6 总结
 
-Static TypeScript（STS）填补了嵌入式编译器中有趣的空白。STS 的工具链完全由 TypeScript 实现，使之可以在浏览器运行并能为覆盖大部分 TypeScript 功能的子集成成 ARM（Thumb）机器码。STS 利用类的名义类型解释（nominal interpretation）提高编译代码的效率。有赖于 MakeCode，STS 现已广泛运行在许多低 RAM 的设备上。一组对 STS 的小型基准评估表明，STS 生成的代码比各种脚本语言的嵌入式解释器的运行速度要快得多。迄今为止最大的 STS 应用程序是 MakeCode Arcade，其游戏引擎有超过 10,000 行 STS 代码。
+Static TypeScript（STS）填补了嵌入式编译器中有趣的空白。STS 的工具链完全由 TypeScript 实现，使之可以在浏览器运行并能为覆盖大部分 TypeScript 功能的子集生成 ARM（Thumb）机器码。STS 利用类的名义类型解释（nominal interpretation）提高编译代码的效率。得益于 MakeCode 项目的流行，STS 现已广泛运行在许多低 RAM 的设备上。一组对 STS 的小型基准测试表明，STS 生成的代码比各种脚本语言的嵌入式解释器的运行速度要快得多。迄今为止最大的 STS 应用程序是 MakeCode Arcade，其游戏引擎有超过 10,000 行 STS 代码。
 
 **致谢** 我们要感谢 MakeCode 团队的成员和前成员：Abhijith Chatra、Sam El-Husseini、Caitlin Hennessy、Steve Hodges、Guillaume
 Jenkins、Shannon Kao、Richard Knoll、Jacqueline Russell、Daryl Zuniga。我们还要感谢 Lancaster 大学的 James Devine 和 Joe Finney，他们开发的 CODAL 是 STS 的 C++运行时的一部分。最后，我们还要感谢匿名审稿人的评论，并感谢 Edd Barrett 帮忙润色本文的最终版本。
