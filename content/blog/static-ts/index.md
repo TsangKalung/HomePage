@@ -64,6 +64,8 @@ STS 简单编译的编译方案（将在第 3 节详述）在一系列小型 Jav
 
 STS 是 MakeCode 框架支持的核心语言（详情见 https://makecode.com ；该框架及诸多编辑器已按 MIT 协议开源，请见 https://github.com/microsoft/pxt ）。MakeCode 支持为单片机设备创造自定义的嵌入式编程实验。每个 MakeCode 实验（我们一般称其为编辑器（editors），虽然它们也包含了模拟器、API、教程、文档等）通过 STS 针对特定设备或设备类型进行编程。
 
+![3](./figure_3.png)
+
 大多数 MakeCode 编辑器主要以 Web 应用的形式部署，其中包含了用以开发 STS 程序的功能齐全的文本编辑器，它基于 Monaco（VS Code 使用的编辑器组件）；还包含了基于 Google Blockly 框架的图形化编程界面（注释中的 STS 元数据定义了 STS 的 API 到 Blockly 的映射，MakeCode 会在 Blockly 和 STS 之间进行交互）。
 
 MakeCode 编辑器和原先 BBC micro:bit 和 Adafruit CPX（详情见 https://makecode.microbit.org/ 和 https://makecode.adafruit.com/ ）的编程实验至今已经覆盖了全球的数百万学生和教师。
@@ -315,6 +317,8 @@ Duktape 使用 BCM 上的默认配置进行编译。在 STM 上，使用默认�
 
 ## 4.1 基准测试
 
+![4](./figure_4.png)
+
 我们使用以下的一系列基准测试。我们尝试使用在 TypeScript/JavaScript 和 Python 中等效的代码，然后对比运行时间而不是语言。（更具体地说，Python fann 使用的算法不同于 C 或 JavaScript 版本，我们对其进行了修改，使它们使用相同的算法且直接进行数组访问；Python 二进制文件更改为使用类而不是元组。之所以进行这些更改，是因为我们想测试数组访问和类实现的性能。我们没有改变 richards 或 nbody 的实现。）由于 C 程序内存不安全且使用静态的整数表示形式，所以它们不一定具有可比性。
 
 **Richards：**Martin Richard's 基准测试模拟操作系统的调度器队列。我们从 JetStream 基准套件[11]中获取 JavaScript 来源，并将原型初始化替换为等效的类代码，在需要的时候添加类型信息，从而将它们转换为 TypeScript 代码。该基准测试使用许多类以及用于不同调度程序任务的派生方法，用以测试对象属性访问性能。我们还使用了该基准测试的 C 和 Python 版本，它们使用单一结构以及 switch 语句和函数指针执行任务。 我们开发了等效的 TypeScript 代码（标记为 _richards2_），但是基于类的版本（_richards_）似乎可以更好地反映典型的 JavaScript 编码模式。该基准测试的参数是数千次调度迭代的具体次数。
@@ -332,6 +336,10 @@ Duktape 使用 BCM 上的默认配置进行编译。在 STM 上，使用默认�
 在高频属性访问（Binary 和 richards）基准测试中，STS 比解释器们要快一个数量级，比 Node.js 慢不到两倍，而且解释器的内存耗尽要比二进制上的 STS 快得多。对于直接组合计算（fann），STS 比解释器快大约一个数量级，但比 Node.js（在 V8 中使用了相当先进的优化器）慢几倍。 在浮点计算（nbody）中，STS 仍比解释器快得多，但比 Node.js 慢 20 倍，后者更好地利用了 FPU。
 
 一般来说，运行时间越长的基准测试越能表明性能。我们还列出了迭代次数较少的结果，以便能够在同一程序上直接比较 BCM 和 STM 的性能差异。 在此类程序上，JIT 预热时间在 Node.js 结果中占很大一部分。
+
+![5](figure_5.png)
+
+![6](figure_6.png)
 
 STS VM 比 ARM Thumb STS 慢 5-6 倍，除了高频的浮点 nbody 基准测试外，该基准测试的大部分运算都是在 C++ 运行时函数中执行的。 但是，STS VM 仍然比解释器快得多，
 这表明类的静态内存布局对 STS 的整体性能大有裨益。
