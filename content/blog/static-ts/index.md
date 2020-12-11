@@ -28,7 +28,7 @@ comments: true
 
 近年来，课堂上计算机的实物教学不断地发展，以鼓励孩子们构建自己的简单的交互嵌入式系统。例如，图 1（a）展示了 BBC micro:bit[1]，它是一种受 Arduino 启发的小型可编程单片机，带有集成的 5X5 LED 显示点阵、几个传感器和低功耗蓝牙（BLE）无线传输。该设备与 2015 年首次向英国所有 7 年级学生推出（10 至 11 岁），随后走向全球，迄今为止 micro:bit 教育基金会（ https://microbit.org ）已经发放了四百万个设备。图 1（b）则展示了另一个以 RGB LED 为特点的教育设备 Adafruit’s Circuit Playground Express (CPX)。
 
-![图1](./figure_1.png)
+![图 1：两个 Cortex-M0 的单片机教育设备：(a) BBC micro:bit 拥有包含 16kB RAM 和 256kB 闪存的 Nordic nRF51822 微控制单元；(b) Adafruit’s Circuit Playground Express ( https://adafruit.com/products/3333 ) 拥有包含 32kb RAM 和 256kB 闪存的 Atmel SAMD21 微控制单元。](./figure_1.png)
 
 **图 1** 两个 Cortex-M0 的单片机教育设备：(a) BBC micro:bit 拥有包含 16kB RAM 和 256kB 闪存的 Nordic nRF51822 微控制单元；(b) Adafruit’s Circuit Playground Express ( https://adafruit.com/products/3333 ) 拥有包含 32kb RAM 和 256kB 闪存的 Atmel SAMD21 微控制单元。
 
@@ -42,7 +42,7 @@ comments: true
 
 面对这些挑战，有许多流行脚本语言的嵌入式解释器应运而生，例如 JavaScript 的 JerryScript[8,15]、Duktape[22]、Espruino[23]、mJS[20]、MuJS[19]，Python 的 MicroPython[9]及其分支 CircuitPython[12]。这些解释器直接在微控制器上运行，仅依赖从计算机向嵌入式设备传输程序文本；但它们也舍弃了深度优化的 JIT 编译器（如 V8）的一些优势，这类编译器运行需要的内存比单片机的内存要大两个数量级。
 
-![2](./figure_2.png)
+![图 2：三款有 160x120 分辨率彩色屏幕的基于单片机的游戏机，这些开发板使用 ARM 的 Cortex-M4F 核心：ATSAMD51G19（192kB RAM，以 120Mhz 主频运行）和 STM32F401RE（96kB RAM，以 84Mhz 主频运行）。](./figure_2.png)
 
 **图 2** 三款有 160x120 分辨率彩色屏幕的基于单片机的游戏机，这些开发板使用 ARM 的 Cortex-M4F 核心：ATSAMD51G19（192kB RAM，以 120Mhz 主频运行）和 STM32F401RE（96kB RAM，以 84Mhz 主频运行）。
 
@@ -64,7 +64,9 @@ STS 简单编译的编译方案（将在第 3 节详述）在一系列小型 Jav
 
 STS 是 MakeCode 框架支持的核心语言（详情见 https://makecode.com ；该框架及诸多编辑器已按 MIT 协议开源，请见 https://github.com/microsoft/pxt ）。MakeCode 支持为单片机设备创造自定义的嵌入式编程实验。每个 MakeCode 实验（我们一般称其为编辑器（editors），虽然它们也包含了模拟器、API、教程、文档等）通过 STS 针对特定设备或设备类型进行编程。
 
-![3](./figure_3.png)
+![图 3：MakeCode Arcade 编辑器。左边的面板是 Arcade 设备的模拟器；中间的面板是编辑器中可用的 API 的目录；右边的面板是 Monaco 编辑器，可用在其中用 STS 代码为平台游戏编程（ https://makecode.com/85409-23773-98992-33605 ）。位于顶部的开关用来在模块可视化编程和 Static TypeScript 编程面板之间切换（由于市场因素，被标记为 JavaScript）。](./figure_3.png)
+
+**图 3** MakeCode Arcade 编辑器。左边的面板是 Arcade 设备的模拟器；中间的面板是编辑器中可用的 API 的目录；右边的面板是 Monaco 编辑器，可用在其中用 STS 代码为平台游戏编程（ https://makecode.com/85409-23773-98992-33605 ）。位于顶部的开关用来在模块可视化编程和 Static TypeScript 编程面板之间切换（由于市场因素，被标记为 JavaScript）。
 
 大多数 MakeCode 编辑器主要以 Web 应用的形式部署，其中包含了用以开发 STS 程序的功能齐全的文本编辑器，它基于 Monaco（VS Code 使用的编辑器组件）；还包含了基于 Google Blockly 框架的图形化编程界面（注释中的 STS 元数据定义了 STS 的 API 到 Blockly 的映射，MakeCode 会在 Blockly 和 STS 之间进行交互）。
 
@@ -73,8 +75,6 @@ MakeCode 编辑器和原先 BBC micro:bit 和 Adafruit CPX（详情见 https://m
 STS 支持包（package）的概念，即 STS、C++、汇编代码文件的集合，并支持把其他的包当做依赖。第三方开发者已经利用这样的能力对 MakeCode 编辑器进行扩展，使之可以支持各种开发板的外接设备（micro:bit 的相关示例见 https://makecode.microbit.org/extensions ）。值得注意的是，大多数包完全用 STS 编写从而避免了不安全 C/C++ 的陷阱，这主要得益于高效的 STS 编译器以及通过数/模针脚（GPIO、PWM、servos）和一些协议（I2C 和 SPI）访问硬件实现的底层 STS API。
 
 图 3 展示了用来为图 2 中的手持游戏设备进行编程的 MakeCode Arcade 编辑器（事实上，图中编辑器里的 STS 程序就是在三个单片机设备中运行的游戏之一，它是一个简单的平台游戏）。MakeCode Arcade 包含了一个大部分由 STS 编写的游戏引擎，因此对代码运行效率提出了很高的要求，因为要在高帧率下实现令人快活的视觉效果。该游戏引擎包含游戏循环逻辑、事件上下文栈、物理引擎、文字线条绘制等模块以及用于特定游戏的框架（比如，为图中的平台游戏（译者注：platformer games，这是一种游戏类型）），游戏引擎一共由一万行 STS 代码和少数最基础的 C++ 图像模糊函数组成。该游戏用 Arcade 构建，在浏览器（桌面或移动端）运行，或在不同型号但符合配置要求的单片机上运行（160\*120 像素 16 色屏幕和 100MHz 左右主频、100kB RAM 左右的微控制器）。
-
-**图 3** MakeCode Arcade 编辑器。左边的面板是 Arcade 设备的模拟器；中间的面板是编辑器中可用的 API 的目录；右边的面板是 Monaco 编辑器，可用在其中用 STS 代码为平台游戏编程（ https://makecode.com/85409-23773-98992-33605 ）。位于顶部的开关用来在模块可视化编程和 Static TypeScript 编程面板之间切换（由于市场因素，被标记为 JavaScript）。
 
 本文的主要目的是详述了该广泛应用的系统和解决上述课堂教学难题的方法。
 
@@ -317,7 +317,9 @@ Duktape 使用 BCM 上的默认配置进行编译。在 STM 上，使用默认�
 
 ## 4.1 基准测试
 
-![4](./figure_4.png)
+![图 4：BCM 和 STM32 MCU 上的基准测试运行时间结果；VM 指 STS 虚拟机，OOM 指内存不足。](./figure_4.png)
+
+**图 4**：BCM 和 STM32 MCU 上的基准测试运行时间结果；VM 指 STS 虚拟机，OOM 指内存不足。
 
 我们使用以下的一系列基准测试。我们尝试使用在 TypeScript/JavaScript 和 Python 中等效的代码，然后对比运行时间而不是语言。（更具体地说，Python fann 使用的算法不同于 C 或 JavaScript 版本，我们对其进行了修改，使它们使用相同的算法且直接进行数组访问；Python 二进制文件更改为使用类而不是元组。之所以进行这些更改，是因为我们想测试数组访问和类实现的性能。我们没有改变 richards 或 nbody 的实现。）由于 C 程序内存不安全且使用静态的整数表示形式，所以它们不一定具有可比性。
 
@@ -337,9 +339,13 @@ Duktape 使用 BCM 上的默认配置进行编译。在 STM 上，使用默认�
 
 一般来说，运行时间越长的基准测试越能表明性能。我们还列出了迭代次数较少的结果，以便能够在同一程序上直接比较 BCM 和 STM 的性能差异。 在此类程序上，JIT 预热时间在 Node.js 结果中占很大一部分。
 
-![5](figure_5.png)
+![图5：测量三种MCU上各种形式的成员访问所需的时间周期，每项形式的操作运行一百万次，然后将测得的平均耗时换算成时间周期。](figure_5.png)
 
-![6](figure_6.png)
+**图 5**：测量三种 MCU 上各种形式的成员访问所需的时间周期，每项形式的操作运行一百万次，然后将测得的平均耗时换算成时间周期。
+
+![图6：测量三个MCU上各种语言基础构造消耗的时间周期。双精度数学运算包括分配和摊派GC的耗时。](figure_6.png)
+
+**图 6**：测量三个 MCU 上各种语言基础构造消耗的时间周期。双精度数学运算包括分配和摊派 GC 的耗时。
 
 STS VM 比 ARM Thumb STS 慢 5-6 倍，除了高频的浮点 nbody 基准测试外，该基准测试的大部分运算都是在 C++ 运行时函数中执行的。 但是，STS VM 仍然比解释器快得多，
 这表明类的静态内存布局对 STS 的整体性能大有裨益。
@@ -347,6 +353,10 @@ STS VM 比 ARM Thumb STS 慢 5-6 倍，除了高频的浮点 nbody 基准测试�
 STM32 和 SAMD 上的实验结果差异很小（约 0.1％）。在 BCM 核心上，我们运行了 10 次基准测试，并选择了最快的结果作为实验数据。
 
 ## 4.3 成员访问（member access）的性能
+
+![图7](figure_7.png)
+
+**图7**：在STM32上去除某些优化后运行时间的增加程度。
 
 图 5 记录了各种形式的成员访问（请参阅 3.4 节）的耗时测算，表格的前四行是循环进行对`this`字段访问、具有动态子类型检查的访问、通过接口查找的访问、对动态映射对象访问的耗时。
 
