@@ -11,6 +11,7 @@ const Dairy = ({ data, location }) => {
     <Layout location={location} title={siteTitle}>
       <SEO title="Dairy" />
       <h1>My Tech-diary</h1>
+      
     </Layout>
   )
 }
