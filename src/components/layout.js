@@ -59,7 +59,7 @@ const Layout = ({ location, title, children }) => {
 
   const header = (
     <>
-      {/* {toggle} */}
+      {toggle}
       <h2
         style={{
           ...scale(1),
@@ -78,7 +78,7 @@ const Layout = ({ location, title, children }) => {
           {title}
         </Link>
       </h2>
-      <h3
+      {/* <h3
         style={{
           marginTop: 10,
           marginBottom: 0,
@@ -105,16 +105,24 @@ const Layout = ({ location, title, children }) => {
         >
           dairy
         </Link>
-      </h3>
-      {/* <h3
+      </h3> */}
+      <h3
         style={{
           marginTop: 5,
           fontFamily: `Futura`,
           fontWeight: 400,
         }}
-      > */}
-
-      {/* </h3> */}
+      >
+        <Link
+          style={{
+            boxShadow: `none`,
+            color: `inherit`,
+          }}
+          to={"/about-me"}
+        >
+          - about -
+        </Link>
+      </h3>
     </>
   )
 
