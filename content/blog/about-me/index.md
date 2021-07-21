@@ -1,11 +1,13 @@
 ---
 title: About
-date: "2019-07-27T07:26:03.284Z"
+date: "2021-07-22T07:26:03.284Z"
 categories: [about]
 comments: false
 ---
 
-Tsang Ka-Lung(in Cantonese) is a ECE student in Beijing University of Posts and Telecommunications.This weblog is his tech-dairy.
+Tsang Ka-Lung(in Cantonese) is a software engineer at Ant Group.
+He currently focuses on the runtime and build of mini program.
+He obtained a bachelor's degree in engineering from Beijing University of Posts and Telecommunications.
 
 ---
 
