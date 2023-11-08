@@ -1,12 +1,16 @@
 ---
 title: About
-date: "2021-07-22T07:26:03.284Z"
+date: "2023-11-08T07:26:03.284Z"
 categories: [about]
 comments: false
 ---
 
-Tsang Ka-Lung(in Cantonese) is a software engineer at Ant Group.
-He currently focuses on the runtime and build of mini program.
+Tsang Ka-Lung(in Cantonese) is a software engineer at Tiktok.
+
+He currently focuses on the mobile pages of [Tiktok Shop](https://shop.tiktok.com/business/en).
+
+Prior to that he developed Bytedance hybrid framework for mobile, and earlier, he worked for the the runtime and build of mini program in Ant Group.
+
 He obtained a bachelor's degree in engineering from Beijing University of Posts and Telecommunications.
 
 ---
