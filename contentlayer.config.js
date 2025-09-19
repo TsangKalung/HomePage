@@ -1,5 +1,16 @@
 import { defineDocumentType, makeSource } from "contentlayer/source-files"
 
+function remarkNormalizeAdmonitions() {
+  const map = { tip: "Tip", warning: "Warning", error: "Error", success: "Success" }
+  const walk = (n) => {
+    if (!n || typeof n !== "object") return
+    const isJsx = n.type === "mdxJsxFlowElement" || n.type === "mdxJsxTextElement"
+    if (isJsx && typeof n.name === "string" && map[n.name]) n.name = map[n.name]
+    if (Array.isArray(n.children)) n.children.forEach(walk)
+  }
+  return (tree) => walk(tree)
+}
+
 /** @type {import('contentlayer/source-files').ComputedFields} */
 const computedFields = {
   slug: {
@@ -51,4 +62,7 @@ export const Post = defineDocumentType(() => ({
 export default makeSource({
   contentDirPath: "./content",
   documentTypes: [Post, Page],
+  mdx: {
+    remarkPlugins: [remarkNormalizeAdmonitions],
+  },
 })
