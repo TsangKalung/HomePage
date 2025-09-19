@@ -22,7 +22,11 @@ const Callout = ({ children }: { children: React.ReactNode; type?: string }) => 
   )
 }
 
-const callout = (t: string) => (props: any) => <Callout type={t} {...props} />
+const callout = (t: string) => {
+  const Comp = (props: any) => <Callout type={t} {...props} />
+  Comp.displayName = `Callout(${t})`
+  return Comp
+}
 
 const components = {
   Image,
