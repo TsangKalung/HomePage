@@ -15,3 +15,14 @@
   text-shadow: 0 0 8px rgba(204, 255, 0, 0.8), 0 0 12px rgba(204, 255, 0, 0.4);
   box-shadow: 0 0 10px rgba(204, 255, 0, 0.6);
 }
+
+.prose table th,
+.prose table td {
+  padding-left: 0 !important;
+  padding-right: 1rem;
+}
+
+.prose table th,
+.prose table td {
+  padding-left: 0 !important;
+}
