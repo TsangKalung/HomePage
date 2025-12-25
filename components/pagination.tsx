@@ -31,19 +31,19 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-center gap-4 my-12">
+    <div className="flex items-center justify-center gap-4 my-12 not-prose">
       {getPageNumbers().map((page, index) => (
         <span key={index}>
           {typeof page === "number" ? (
             <button
+              type="button"
               onClick={() => onPageChange(page)}
-              className={`px-2 py-1 text-lg transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+              className={`px-2 py-1 text-lg transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer font-title ${
                 currentPage === page
                   ? "text-black dark:text-white underline decoration-2 underline-offset-4"
                   : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
               }`}
               style={{ 
-                fontFamily: 'Merriweather, Georgia, serif',
                 fontWeight: currentPage === page ? 700 : 400,
                 transitionTimingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
               }}
@@ -51,8 +51,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
               {page}
             </button>
           ) : (
-            <span className="text-gray-400 dark:text-gray-600 text-lg"
-                  style={{ fontFamily: 'Merriweather, Georgia, serif' }}>
+            <span className="text-gray-400 dark:text-gray-600 text-lg font-title">
               …
             </span>
           )}

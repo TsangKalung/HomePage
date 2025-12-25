@@ -52,9 +52,8 @@ export default async function PostPage({ params }: PostProps) {
   return (
     <article className="py-6 prose dark:prose-invert" style={{ wordBreak: 'break-word' }}>
       <h1
-        className="mb-2"
+        className="mb-2 font-title"
         style={{
-          fontFamily: 'Merriweather, Georgia, serif',
           fontWeight: 900,
           textRendering: "optimizeLegibility",
         }}>

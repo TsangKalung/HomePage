@@ -7,12 +7,17 @@ import { Pagination } from "@/components/pagination";
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function Home() {
+export default function Blog() {
+  // 过滤出不包含 translation 类别的文章（即博客文章）
+  const blogPosts = useMemo(() => allPosts.filter((post) => 
+    !post.categories || !post.categories.includes("translation")
+  ), []);
+
   const sortedPosts = useMemo(() => {
-    return [...allPosts].sort((a, b) => {
+    return [...blogPosts].sort((a, b) => {
       return Date.parse(b.date) - Date.parse(a.date);
     });
-  }, []);
+  }, [blogPosts]);
 
   const {
     currentData: currentPosts,
@@ -25,13 +30,13 @@ export default function Home() {
   });
 
   return (
-    <div className="relative">
+    <div style={{ position: 'relative' }}>
       <motion.div
         key={currentPage}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="relative z-0 prose dark:prose-invert"
+        className="prose dark:prose-invert"
       >
         {currentPosts.map((post) => (
           <article 
@@ -54,7 +59,7 @@ export default function Home() {
         ))}
       </motion.div>
       
-      <div className="relative z-10">
+      <div style={{ position: 'relative', zIndex: 100 }}>
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -64,3 +69,4 @@ export default function Home() {
     </div>
   );
 }
+
