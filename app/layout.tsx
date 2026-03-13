@@ -11,15 +11,17 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const merriweather = Merriweather({ 
   weight: ["300", "400", "700", "900"], 
   subsets: ["latin"], 
-  variable: "--font-merriweather" 
+  variable: "--font-merriweather",
+  style: ["normal", "italic"]
 })
 const bodoni = Bodoni_Moda({ 
   subsets: ["latin"], 
-  variable: "--font-bodoni" 
+  variable: "--font-bodoni",
+  style: ["normal", "italic"]
 })
 
 export const metadata = {
-  title: "Tsang's Blog",
+  title: "Notes by Kalung Tsang",
   description: "Oh, What a tangled web we weave!",
 }
 

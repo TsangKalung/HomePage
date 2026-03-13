@@ -2,20 +2,9 @@ import Image from "next/image"
 import { useMDXComponent } from "next-contentlayer/hooks"
 
 const Callout = ({ children }: { children: React.ReactNode; type?: string }) => {
-  const p = {
-    bgFrom: "from-neutral-50/90 dark:from-[#0a0a0a]/60",
-    bgTo: "to-white/80 dark:to-black/50",
-    bar: "from-black/40 via-black/30 to-black/20",
-    glow: "bg-black/10",
-    ring: "ring-black/10",
-    shadow: "shadow-[0_16px_40px_-24px_rgba(0,0,0,0.5)]",
-  }
-
   return (
-    <div className={`not-prose relative my-8 overflow-hidden rounded-3xl border border-black/10 bg-gradient-to-br ${p.bgFrom} ${p.bgTo} p-6 ${p.shadow} ring-1 ring-inset ${p.ring} backdrop-blur-[2px]`}>
-      <div className={`pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b ${p.bar} opacity-70`} />
-      <div className={`pointer-events-none absolute -top-12 -right-10 h-28 w-28 rounded-full ${p.glow} blur-2xl`} />
-      <div className="prose dark:prose-invert antialiased max-w-none text-[1rem] leading-[1.92] tracking-[0.006em] prose-p:my-3.5 prose-headings:tracking-[0.004em]">
+    <div className="not-prose relative my-8 rounded-lg border-l-[3px] border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-900/50 px-5 py-4">
+      <div className="prose dark:prose-invert antialiased max-w-none text-[0.938rem] leading-[1.85] tracking-[0.005em] text-slate-600 dark:text-slate-400 prose-p:my-3 prose-strong:text-slate-800 dark:prose-strong:text-slate-200 prose-headings:text-slate-800 dark:prose-headings:text-slate-200 prose-headings:tracking-[0.004em] prose-headings:text-[0.938rem] prose-headings:font-semibold prose-headings:mt-0 prose-headings:mb-2">
         {children}
       </div>
     </div>

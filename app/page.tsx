@@ -26,33 +26,33 @@ export default function Home() {
 
   return (
     <div className="relative">
-      <motion.div
-        key={currentPage}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="relative z-0 prose dark:prose-invert"
-      >
-        {currentPosts.map((post) => (
-          <article 
-            key={post._id}
-            className="transform transition-all duration-200 hover:translate-x-1"
-          >
-            <Link href={post.slug} style={{ textDecoration: "none" }}>
-              <h2
-                className="font-title"
-                style={{
-                  fontWeight: 900,
-                  textRendering: "optimizeLegibility"
-                }}
-              >
-                {post.title}
-              </h2>
-            </Link>
-            {post.description && <p>{post.description}</p>}
-          </article>
-        ))}
-      </motion.div>
+      <div className="relative z-0 prose dark:prose-invert">
+        <div className="space-y-8 post-list-container">
+          {currentPosts.map((post) => (
+            <article 
+              key={post._id}
+              className="transition-opacity duration-500 ease-out"
+            >
+              <Link href={post.slug} className="no-underline group">
+                <h2
+                  className="font-title text-2xl mb-2 group-hover:text-black dark:group-hover:text-white transition-colors"
+                  style={{
+                    fontWeight: 900,
+                    textRendering: "optimizeLegibility"
+                  }}
+                >
+                  {post.title}
+                </h2>
+                {post.description && (
+                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                    {post.description}
+                  </p>
+                )}
+              </Link>
+            </article>
+          ))}
+        </div>
+      </div>
       
       <div className="relative z-10">
         <Pagination

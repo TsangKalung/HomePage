@@ -2,18 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
-::selection {
-  background-color: #ccff00;
-  color: black;
-  text-shadow: 0 0 8px rgba(204, 255, 0, 0.8), 0 0 12px rgba(204, 255, 0, 0.4);
-  box-shadow: 0 0 10px rgba(204, 255, 0, 0.6);
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply antialiased min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50;
+  }
 }
 
-::-moz-selection {
-  background-color: #ccff00;
-  color: black;
-  text-shadow: 0 0 8px rgba(204, 255, 0, 0.8), 0 0 12px rgba(204, 255, 0, 0.4);
-  box-shadow: 0 0 10px rgba(204, 255, 0, 0.6);
+/* 
+  Fix: Only dim other articles when an article is actively hovered. 
+  This prevents the "all white" issue when hovering margins between items.
+*/
+.post-list-container:has(article:hover) article:not(:hover) {
+  opacity: 0.3;
+}
+
+::selection {
+  background-color: #000;
+  color: #fff;
+}
+
+.dark ::selection {
+  background-color: #fff;
+  color: #000;
+}
+
+/* Custom Scrollbar - Minimalist */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 dark:bg-slate-800;
+  border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-300 dark:bg-slate-700;
 }
 
 .prose table th,
@@ -22,7 +54,7 @@
   padding-right: 1rem;
 }
 
-.prose table th,
-.prose table td {
-  padding-left: 0 !important;
+/* 移除可能存在的下划线干扰 */
+.prose a {
+  @apply no-underline border-b border-slate-300 dark:border-slate-700 hover:border-black dark:hover:border-white transition-colors duration-200;
 }
