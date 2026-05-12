@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 type MarketId = "us" | "kr";
 type SessionId = "closed" | "pre" | "regular" | "post";
 type FetchState = "idle" | "loading" | "success" | "error";
 type CompanyId = "nvda" | "mu" | "hynix" | "samsung";
+type MarketDataSource = "endpoint" | "stockdata" | "finnhub" | "public";
 
 type CompanyConfig = {
   id: CompanyId;
@@ -30,6 +31,7 @@ type CompanySnapshot = {
 
 type RatioSnapshot = {
   updatedAt: number;
+  dataSource?: MarketDataSource;
   usdKrw: number;
   ratio: number;
   nvdaMarketCapUsdMillions: number;
@@ -60,36 +62,61 @@ type PollPlan = {
   isPolling: boolean;
 };
 
-type YahooChartResponse = {
-  chart?: {
-    result?: YahooChartResult[] | null;
-    error?: { code?: string; description?: string } | null;
-  };
+type FlipValueProps = {
+  value: string;
+  numericValue?: number | null;
+  className?: string;
+  animate?: boolean;
 };
 
-type YahooProxyResponse = YahooChartResponse & {
-  contents?: string;
-  status?: {
-    http_code?: number;
-  };
-};
-
-type YahooChartResult = {
-  meta?: {
-    regularMarketPrice?: number;
-    chartPreviousClose?: number;
-    previousClose?: number;
-  };
-  indicators?: {
-    quote?: Array<{
-      close?: Array<number | null>;
-    }>;
-  };
-};
-
-type YahooPoint = {
+type QuotePoint = {
   price: number;
   previousClose: number | null;
+  changePercent: number | null;
+};
+
+type FinnhubQuoteResponse = {
+  c?: number;
+  pc?: number;
+  dp?: number;
+  error?: string;
+};
+
+type FinnhubForexRatesResponse = {
+  quote?: {
+    KRW?: number;
+  };
+  error?: string;
+};
+
+type TerminalFeedStocksResponse = {
+  data?: Array<{
+    symbol?: string;
+    price?: number;
+    change_percent?: number;
+    prev_close?: number;
+  }>;
+};
+
+type StockDataQuoteResponse = {
+  data?: Array<{
+    ticker?: string;
+    price?: number;
+    previous_close_price?: number;
+    day_change?: number;
+    is_extended_hours_price?: boolean;
+    last_trade_time?: string;
+  }>;
+};
+
+type KoreaStocksResponse = {
+  success?: boolean;
+  data?: Array<{
+    code?: string;
+    currentPrice?: number;
+    changeRate?: number;
+    isDelisted?: boolean;
+  }>;
 };
 
 type ExchangeRateResponse = {
@@ -100,19 +127,20 @@ type ExchangeRateResponse = {
 };
 
 const HBM_RATIO_ENDPOINT = process.env.NEXT_PUBLIC_HBM_RATIO_ENDPOINT || "";
-const YAHOO_CHART_BASE_URL = "https://query1.finance.yahoo.com/v8/finance/chart";
-const YAHOO_CORS_PROXY_URL =
-  process.env.NEXT_PUBLIC_YAHOO_CORS_PROXY_URL || "https://api.allorigins.win/get?url=";
+const FINNHUB_API_KEY = process.env.NEXT_PUBLIC_FINNHUB_API_KEY || "";
+const STOCKDATA_API_TOKEN = process.env.NEXT_PUBLIC_STOCKDATA_API_TOKEN || "";
+const FINNHUB_BASE_URL = "https://finnhub.io/api/v1";
+const TERMINALFEED_STOCKS_URL = "https://terminalfeed.io/api/stocks?symbols=NVDA,MU";
+const STOCKDATA_QUOTES_URL = "https://api.stockdata.org/v1/data/quote";
+const KOREA_STOCKS_URL = "https://stock.total-hts.com/api/stocks?codes=005930,000660";
 const USD_KRW_RATE_URL = "https://open.er-api.com/v6/latest/USD";
 
-const POLL_INTERVAL_MS = 10_000;
+const POLL_INTERVAL_MS = 15_000;
 const HIDDEN_POLL_INTERVAL_MS = 60_000;
 const SNAPSHOT_STALE_MS = 2 * 60 * 1000;
-const MAX_TIMER_MS = 2_147_000_000;
+const NO_CACHE_PARAM = "_hbm_no_cache";
 
-const STORAGE_KEYS = {
-  snapshot: "hbm_ratio_snapshot_v2",
-};
+let noCacheRequestId = 0;
 
 const COMPANIES: CompanyConfig[] = [
   {
@@ -354,73 +382,6 @@ function getMarketClock(now: Date): MarketClock {
   return { us, kr, anyOpen: us.isOpen || kr.isOpen, nextOpenAt };
 }
 
-function readJson<T>(key: string): T | null {
-  if (typeof window === "undefined") return null;
-
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeJson(key: string, value: unknown) {
-  if (typeof window === "undefined") return;
-
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    return;
-  }
-}
-
-function yahooChartUrl(symbol: string) {
-  const params = new URLSearchParams({
-    interval: "1m",
-    range: "1d",
-    includePrePost: "true",
-  });
-
-  return `${YAHOO_CHART_BASE_URL}/${encodeURIComponent(symbol)}?${params.toString()}`;
-}
-
-function proxiedYahooUrl(url: string) {
-  return YAHOO_CORS_PROXY_URL ? `${YAHOO_CORS_PROXY_URL}${encodeURIComponent(url)}` : url;
-}
-
-function latestYahooPoint(result: YahooChartResult, symbol: string): YahooPoint {
-  const closes = result.indicators?.quote?.[0]?.close || [];
-
-  for (let index = closes.length - 1; index >= 0; index -= 1) {
-    const close = closes[index];
-
-    if (Number.isFinite(close) && Number(close) > 0) {
-      return {
-        price: Number(close),
-        previousClose: Number.isFinite(result.meta?.chartPreviousClose)
-          ? Number(result.meta?.chartPreviousClose)
-          : Number.isFinite(result.meta?.previousClose)
-          ? Number(result.meta?.previousClose)
-          : null,
-      };
-    }
-  }
-
-  if (Number.isFinite(result.meta?.regularMarketPrice) && Number(result.meta?.regularMarketPrice) > 0) {
-    return {
-      price: Number(result.meta?.regularMarketPrice),
-      previousClose: Number.isFinite(result.meta?.chartPreviousClose)
-        ? Number(result.meta?.chartPreviousClose)
-        : Number.isFinite(result.meta?.previousClose)
-        ? Number(result.meta?.previousClose)
-        : null,
-    };
-  }
-
-  throw new Error(`${symbol} returned no live price`);
-}
-
 function sleep(ms: number, signal: AbortSignal) {
   return new Promise<void>((resolve, reject) => {
     const timer = window.setTimeout(() => {
@@ -438,32 +399,12 @@ function sleep(ms: number, signal: AbortSignal) {
   });
 }
 
-async function fetchYahooPointOnce(symbol: string, signal: AbortSignal) {
-  const response = await fetch(proxiedYahooUrl(yahooChartUrl(symbol)), {
-    cache: "no-store",
-    signal,
-  });
-  const proxyData = (await response.json()) as YahooProxyResponse;
-  const data = proxyData.contents
-    ? (JSON.parse(proxyData.contents) as YahooChartResponse)
-    : proxyData;
-  const proxyStatus = proxyData.status?.http_code;
-  const error = data.chart?.error;
-  const result = data.chart?.result?.[0];
-
-  if (!response.ok || (proxyStatus && proxyStatus >= 400) || error || !result) {
-    throw new Error(error?.description || `Yahoo chart request failed: ${symbol}`);
-  }
-
-  return latestYahooPoint(result, symbol);
-}
-
-async function fetchYahooPoint(symbol: string, signal: AbortSignal) {
+async function retry<T>(operation: () => Promise<T>, signal: AbortSignal, message: string) {
   let lastError: unknown;
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      return await fetchYahooPointOnce(symbol, signal);
+      return await operation();
     } catch (error) {
       lastError = error;
       if (signal.aborted || attempt === 2) break;
@@ -471,17 +412,104 @@ async function fetchYahooPoint(symbol: string, signal: AbortSignal) {
     }
   }
 
-  throw lastError instanceof Error ? lastError : new Error(`Yahoo chart request failed: ${symbol}`);
+  throw lastError instanceof Error ? lastError : new Error(message);
 }
 
-function changeFromPrevious(point: YahooPoint) {
+function finnhubUrl(path: string, params: Record<string, string>) {
+  const searchParams = new URLSearchParams({
+    ...params,
+    token: FINNHUB_API_KEY,
+  });
+
+  return `${FINNHUB_BASE_URL}${path}?${searchParams.toString()}`;
+}
+
+function withNoCacheParam(input: string) {
+  const nonce = `${Date.now()}-${noCacheRequestId}`;
+  noCacheRequestId += 1;
+
+  try {
+    const base = typeof window === "undefined" ? "https://hbm-ratio.local" : window.location.href;
+    const url = new URL(input, base);
+    url.searchParams.set(NO_CACHE_PARAM, nonce);
+    return /^[a-z][a-z\d+\-.]*:/i.test(input)
+      ? url.toString()
+      : `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    const hashIndex = input.indexOf("#");
+    const path = hashIndex === -1 ? input : input.slice(0, hashIndex);
+    const hash = hashIndex === -1 ? "" : input.slice(hashIndex);
+    const separator = path.includes("?") ? "&" : "?";
+    return `${path}${separator}${NO_CACHE_PARAM}=${encodeURIComponent(nonce)}${hash}`;
+  }
+}
+
+function fetchNoCache(input: string, signal: AbortSignal) {
+  return fetch(withNoCacheParam(input), {
+    cache: "no-store",
+    signal,
+  });
+}
+
+async function readJsonResponse<T>(response: Response) {
+  try {
+    return (await response.json()) as T;
+  } catch {
+    throw new Error(`Market data request returned HTTP ${response.status}`);
+  }
+}
+
+function requireFinnhubApiKey() {
+  if (!FINNHUB_API_KEY) {
+    throw new Error("Missing NEXT_PUBLIC_FINNHUB_API_KEY for live Finnhub market data");
+  }
+}
+
+async function fetchFinnhubQuoteOnce(symbol: string, signal: AbortSignal): Promise<QuotePoint> {
+  requireFinnhubApiKey();
+
+  const response = await fetchNoCache(finnhubUrl("/quote", { symbol }), signal);
+  const data = await readJsonResponse<FinnhubQuoteResponse>(response);
+  const price = Number(data.c);
+  const previousClose = Number(data.pc);
+  const changePercent = Number(data.dp);
+
+  if (!response.ok || data.error) {
+    throw new Error(data.error || `Finnhub quote request failed: ${symbol}`);
+  }
+
+  if (!Number.isFinite(price) || price <= 0) {
+    throw new Error(`${symbol} returned no live price`);
+  }
+
+  return {
+    price,
+    previousClose: Number.isFinite(previousClose) && previousClose > 0 ? previousClose : null,
+    changePercent: Number.isFinite(changePercent) ? changePercent : null,
+  };
+}
+
+function fetchFinnhubQuote(symbol: string, signal: AbortSignal) {
+  return retry(
+    () => fetchFinnhubQuoteOnce(symbol, signal),
+    signal,
+    `Finnhub quote request failed: ${symbol}`
+  );
+}
+
+function changeFromPrevious(point: QuotePoint) {
   if (!point.previousClose || point.previousClose <= 0) return null;
   return ((point.price - point.previousClose) / point.previousClose) * 100;
 }
 
-async function fetchUsdKrwRate(signal: AbortSignal) {
-  const response = await fetch(USD_KRW_RATE_URL, { cache: "no-store", signal });
-  const data = (await response.json()) as ExchangeRateResponse;
+function isUsExtendedHours(date = new Date()) {
+  const session = getMarketState(date, "us").session;
+  return session === "pre" || session === "post";
+}
+
+async function fetchUsdKrwRateOnce(signal: AbortSignal) {
+  const response = await fetchNoCache(USD_KRW_RATE_URL, signal);
+  const data = await readJsonResponse<ExchangeRateResponse>(response);
   const usdKrw = data.rates?.KRW;
 
   if (!response.ok || data.result === "error" || !Number.isFinite(usdKrw) || Number(usdKrw) <= 0) {
@@ -491,16 +519,204 @@ async function fetchUsdKrwRate(signal: AbortSignal) {
   return Number(usdKrw);
 }
 
-async function fetchYahooSnapshot(signal: AbortSignal): Promise<RatioSnapshot> {
-  const usdKrw = await fetchUsdKrwRate(signal);
-  const quoteEntries: Array<readonly [CompanyId, YahooPoint]> = [];
+function fetchUsdKrwRate(signal: AbortSignal) {
+  return retry(() => fetchUsdKrwRateOnce(signal), signal, "USD/KRW rate is unavailable");
+}
 
-  for (const company of COMPANIES) {
-    const quote = await fetchYahooPoint(company.symbol, signal);
-    quoteEntries.push([company.id, quote] as const);
+async function fetchTerminalFeedUsQuotesOnce(signal: AbortSignal) {
+  const response = await fetchNoCache(TERMINALFEED_STOCKS_URL, signal);
+  const data = await readJsonResponse<TerminalFeedStocksResponse>(response);
+
+  if (!response.ok || !Array.isArray(data.data)) {
+    throw new Error("TerminalFeed US stock data is unavailable");
   }
 
-  const quotes = Object.fromEntries(quoteEntries) as Record<CompanyId, YahooPoint>;
+  const quotes = new Map<CompanyId, QuotePoint>();
+
+  data.data.forEach((entry) => {
+    const id = entry.symbol === "NVDA" ? "nvda" : entry.symbol === "MU" ? "mu" : null;
+    const price = Number(entry.price);
+    const previousClose = Number(entry.prev_close);
+    const changePercent = Number(entry.change_percent);
+
+    if (!id || !Number.isFinite(price) || price <= 0) return;
+
+    quotes.set(id, {
+      price,
+      previousClose: Number.isFinite(previousClose) && previousClose > 0 ? previousClose : null,
+      changePercent: Number.isFinite(changePercent) ? changePercent : null,
+    });
+  });
+
+  if (!quotes.has("nvda") || !quotes.has("mu")) {
+    throw new Error("TerminalFeed did not return NVDA and MU quotes");
+  }
+
+  return quotes;
+}
+
+function fetchTerminalFeedUsQuotes(signal: AbortSignal) {
+  return retry(
+    () => fetchTerminalFeedUsQuotesOnce(signal),
+    signal,
+    "TerminalFeed US stock data is unavailable"
+  );
+}
+
+function stockDataQuoteUrl() {
+  const searchParams = new URLSearchParams({
+    symbols: "NVDA,MU",
+    extended_hours: "true",
+    api_token: STOCKDATA_API_TOKEN,
+  });
+
+  return `${STOCKDATA_QUOTES_URL}?${searchParams.toString()}`;
+}
+
+async function fetchStockDataUsQuotesOnce(signal: AbortSignal) {
+  if (!STOCKDATA_API_TOKEN) {
+    throw new Error("Missing NEXT_PUBLIC_STOCKDATA_API_TOKEN for extended-hours US quotes");
+  }
+
+  const response = await fetchNoCache(stockDataQuoteUrl(), signal);
+  const data = await readJsonResponse<StockDataQuoteResponse & { message?: string; error?: string }>(response);
+
+  if (!response.ok || !Array.isArray(data.data)) {
+    throw new Error(data.error || data.message || "StockData US stock data is unavailable");
+  }
+
+  const quotes = new Map<CompanyId, QuotePoint>();
+
+  data.data.forEach((entry) => {
+    const id = entry.ticker === "NVDA" ? "nvda" : entry.ticker === "MU" ? "mu" : null;
+    const price = Number(entry.price);
+    const previousClose = Number(entry.previous_close_price);
+    const changePercent = Number(entry.day_change);
+
+    if (!id || !Number.isFinite(price) || price <= 0) return;
+
+    quotes.set(id, {
+      price,
+      previousClose: Number.isFinite(previousClose) && previousClose > 0 ? previousClose : null,
+      changePercent: Number.isFinite(changePercent) ? changePercent : null,
+    });
+  });
+
+  if (!quotes.has("nvda") || !quotes.has("mu")) {
+    throw new Error("StockData did not return NVDA and MU quotes");
+  }
+
+  return quotes;
+}
+
+function fetchStockDataUsQuotes(signal: AbortSignal) {
+  return retry(
+    () => fetchStockDataUsQuotesOnce(signal),
+    signal,
+    "StockData US stock data is unavailable"
+  );
+}
+
+async function fetchKoreaQuotesOnce(signal: AbortSignal) {
+  const response = await fetchNoCache(KOREA_STOCKS_URL, signal);
+  const data = await readJsonResponse<KoreaStocksResponse>(response);
+
+  if (!response.ok || !data.success || !Array.isArray(data.data)) {
+    throw new Error("Korean stock data is unavailable");
+  }
+
+  const quotes = new Map<CompanyId, QuotePoint>();
+
+  data.data.forEach((entry) => {
+    const id = entry.code === "000660" ? "hynix" : entry.code === "005930" ? "samsung" : null;
+    const price = Number(entry.currentPrice);
+    const changePercent = Number(entry.changeRate);
+
+    if (!id || entry.isDelisted || !Number.isFinite(price) || price <= 0) return;
+
+    quotes.set(id, {
+      price,
+      previousClose: null,
+      changePercent: Number.isFinite(changePercent) ? changePercent : null,
+    });
+  });
+
+  if (!quotes.has("hynix") || !quotes.has("samsung")) {
+    throw new Error("Korean stock data did not return SK hynix and Samsung");
+  }
+
+  return quotes;
+}
+
+function fetchKoreaQuotes(signal: AbortSignal) {
+  return retry(() => fetchKoreaQuotesOnce(signal), signal, "Korean stock data is unavailable");
+}
+
+async function fetchPublicSnapshot(signal: AbortSignal): Promise<RatioSnapshot> {
+  const usdKrwPromise = fetchUsdKrwRate(signal);
+  const koreaQuotesPromise = fetchKoreaQuotes(signal);
+  let usQuotes: Map<CompanyId, QuotePoint>;
+  let dataSource: MarketDataSource = "public";
+
+  if (STOCKDATA_API_TOKEN) {
+    try {
+      usQuotes = await fetchStockDataUsQuotes(signal);
+      dataSource = "stockdata";
+    } catch (error) {
+      if (signal.aborted) throw error;
+      usQuotes = await fetchTerminalFeedUsQuotes(signal);
+    }
+  } else {
+    usQuotes = await fetchTerminalFeedUsQuotes(signal);
+  }
+
+  const [usdKrw, koreaQuotes] = await Promise.all([usdKrwPromise, koreaQuotesPromise]);
+  const quotes = Object.fromEntries([
+    ...Array.from(usQuotes.entries()),
+    ...Array.from(koreaQuotes.entries()),
+  ]) as Record<CompanyId, QuotePoint>;
+
+  return buildSnapshot(quotes, usdKrw, dataSource);
+}
+
+async function fetchFinnhubUsdKrwRateOnce(signal: AbortSignal) {
+  requireFinnhubApiKey();
+
+  const response = await fetchNoCache(finnhubUrl("/forex/rates", { base: "USD" }), signal);
+  const data = await readJsonResponse<FinnhubForexRatesResponse>(response);
+  const usdKrw = data.quote?.KRW;
+
+  if (!response.ok || data.error || !Number.isFinite(usdKrw) || Number(usdKrw) <= 0) {
+    throw new Error(data.error || "Finnhub USD/KRW rate is unavailable");
+  }
+
+  return Number(usdKrw);
+}
+
+function fetchFinnhubUsdKrwRate(signal: AbortSignal) {
+  return retry(() => fetchFinnhubUsdKrwRateOnce(signal), signal, "Finnhub USD/KRW rate is unavailable");
+}
+
+async function fetchFinnhubSnapshot(signal: AbortSignal): Promise<RatioSnapshot> {
+  const [usdKrw, quoteEntries] = await Promise.all([
+    fetchFinnhubUsdKrwRate(signal),
+    Promise.all(
+      COMPANIES.map(async (company) => {
+        const quote = await fetchFinnhubQuote(company.symbol, signal);
+        return [company.id, quote] as const;
+      })
+    ),
+  ]);
+
+  const quotes = Object.fromEntries(quoteEntries) as Record<CompanyId, QuotePoint>;
+  return buildSnapshot(quotes, usdKrw, "finnhub");
+}
+
+function buildSnapshot(
+  quotes: Record<CompanyId, QuotePoint>,
+  usdKrw: number,
+  dataSource: MarketDataSource
+): RatioSnapshot {
   const companies = COMPANIES.map((company) => {
     const quote = quotes[company.id];
     const marketCapUsdMillions =
@@ -516,7 +732,7 @@ async function fetchYahooSnapshot(signal: AbortSignal): Promise<RatioSnapshot> {
       price: quote.price,
       priceCurrency: company.currency,
       marketCapUsdMillions,
-      changePercent: changeFromPrevious(quote),
+      changePercent: quote.changePercent ?? changeFromPrevious(quote),
     };
   });
 
@@ -531,6 +747,7 @@ async function fetchYahooSnapshot(signal: AbortSignal): Promise<RatioSnapshot> {
 
   return {
     updatedAt: Date.now(),
+    dataSource,
     usdKrw,
     ratio: hbmMarketCapUsdMillions / nvda.marketCapUsdMillions,
     nvdaMarketCapUsdMillions: nvda.marketCapUsdMillions,
@@ -540,18 +757,21 @@ async function fetchYahooSnapshot(signal: AbortSignal): Promise<RatioSnapshot> {
 }
 
 async function fetchEndpointSnapshot(endpoint: string, signal: AbortSignal) {
-  const response = await fetch(endpoint, { cache: "no-store", signal });
+  const response = await fetchNoCache(endpoint, signal);
   const data = (await response.json()) as RatioSnapshot & { error?: string };
 
   if (!response.ok || data.error || !Number.isFinite(data.ratio)) {
     throw new Error(data.error || `Ratio endpoint failed: ${response.status}`);
   }
 
-  return data;
+  return { ...data, dataSource: data.dataSource || "endpoint" };
 }
 
 function fetchLiveSnapshot(signal: AbortSignal) {
-  return HBM_RATIO_ENDPOINT ? fetchEndpointSnapshot(HBM_RATIO_ENDPOINT, signal) : fetchYahooSnapshot(signal);
+  if (HBM_RATIO_ENDPOINT) return fetchEndpointSnapshot(HBM_RATIO_ENDPOINT, signal);
+  if (STOCKDATA_API_TOKEN) return fetchPublicSnapshot(signal);
+  if (FINNHUB_API_KEY) return fetchFinnhubSnapshot(signal);
+  return fetchPublicSnapshot(signal);
 }
 
 function formatCompactUsd(millions: number) {
@@ -608,6 +828,50 @@ function capShare(company: CompanySnapshot, denominator: number) {
   return Math.max(0, Math.min(100, (company.marketCapUsdMillions / denominator) * 100));
 }
 
+function FlipValue({ value, numericValue, className, animate = true }: FlipValueProps) {
+  const previous = useRef<number | null>(null);
+  const reducedMotion = useReducedMotion();
+  const comparableValue = Number.isFinite(numericValue) ? Number(numericValue) : null;
+  const previousValue = previous.current;
+  const direction =
+    comparableValue !== null && previousValue !== null && comparableValue !== previousValue
+      ? comparableValue > previousValue
+        ? 1
+        : -1
+      : 0;
+
+  useEffect(() => {
+    previous.current = comparableValue;
+  }, [comparableValue]);
+
+  if (reducedMotion || !animate) {
+    return <span className={className}>{value}</span>;
+  }
+
+  return (
+    <span className={`flip-value ${className || ""}`}>
+      <AnimatePresence mode="popLayout" initial={false} custom={direction}>
+        <motion.span
+          key={value}
+          custom={direction}
+          initial={(nextDirection: number) => ({
+            y: nextDirection === 0 ? 0 : nextDirection > 0 ? "100%" : "-100%",
+            opacity: nextDirection === 0 ? 1 : 0,
+          })}
+          animate={{ y: 0, opacity: 1 }}
+          exit={(nextDirection: number) => ({
+            y: nextDirection === 0 ? 0 : nextDirection > 0 ? "-100%" : "100%",
+            opacity: nextDirection === 0 ? 1 : 0,
+          })}
+          transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {value}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
+
 export default function HbmNvdaRatioPage() {
   const [snapshot, setSnapshot] = useState<RatioSnapshot | null>(null);
   const [fetchState, setFetchState] = useState<FetchState>("idle");
@@ -619,12 +883,7 @@ export default function HbmNvdaRatioPage() {
     isPolling: false,
   });
   const [refreshNonce, setRefreshNonce] = useState(0);
-  const abortRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    const cachedSnapshot = readJson<RatioSnapshot>(STORAGE_KEYS.snapshot);
-    if (cachedSnapshot) setSnapshot(cachedSnapshot);
-  }, []);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     setNow(new Date());
@@ -646,20 +905,12 @@ export default function HbmNvdaRatioPage() {
     const schedule = () => {
       if (cancelled) return;
 
-      const clock = getMarketClock(new Date());
-      const delay = clock.anyOpen
-        ? document.hidden
-          ? HIDDEN_POLL_INTERVAL_MS
-          : POLL_INTERVAL_MS
-        : Math.min(
-            Math.max(1000, (clock.nextOpenAt?.getTime() || Date.now() + 60_000) - Date.now()),
-            MAX_TIMER_MS
-          );
+      const delay = document.hidden ? HIDDEN_POLL_INTERVAL_MS : POLL_INTERVAL_MS;
 
       setPollPlan({
-        label: clock.anyOpen ? (document.hidden ? "BACKGROUND POLL" : "LIVE POLLING") : "SLEEPING",
+        label: document.hidden ? "BACKGROUND POLL" : "15S LIVE POLL",
         nextAt: Date.now() + delay,
-        isPolling: clock.anyOpen,
+        isPolling: true,
       });
 
       clearTimer();
@@ -669,34 +920,30 @@ export default function HbmNvdaRatioPage() {
     };
 
     const run = async () => {
-      abortRef.current?.abort();
+      requestIdRef.current += 1;
+      const requestId = requestIdRef.current;
       const controller = new AbortController();
-      abortRef.current = controller;
       setFetchState("loading");
 
       try {
         const nextSnapshot = await fetchLiveSnapshot(controller.signal);
-        if (cancelled) return;
+        if (cancelled || requestId !== requestIdRef.current) return;
         setSnapshot(nextSnapshot);
-        writeJson(STORAGE_KEYS.snapshot, nextSnapshot);
         setError(null);
         setFetchState("success");
       } catch (nextError) {
-        if (cancelled || controller.signal.aborted) return;
+        if (cancelled || requestId !== requestIdRef.current) return;
         setError(nextError instanceof Error ? nextError.message : "Unknown error");
         setFetchState("error");
       } finally {
-        if (!cancelled) schedule();
+        if (!cancelled && requestId === requestIdRef.current) schedule();
       }
     };
 
     const onVisibilityChange = () => {
       clearTimer();
-      const cached = readJson<RatioSnapshot>(STORAGE_KEYS.snapshot);
-      const age = cached ? Date.now() - cached.updatedAt : Number.POSITIVE_INFINITY;
-      const clock = getMarketClock(new Date());
 
-      if (!document.hidden && clock.anyOpen && age > POLL_INTERVAL_MS) {
+      if (!document.hidden) {
         void run();
       } else {
         schedule();
@@ -709,7 +956,7 @@ export default function HbmNvdaRatioPage() {
     return () => {
       cancelled = true;
       clearTimer();
-      abortRef.current?.abort();
+      requestIdRef.current += 1;
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [refreshNonce]);
@@ -722,11 +969,39 @@ export default function HbmNvdaRatioPage() {
   const hbmCapLabel = snapshot ? formatCompactUsd(snapshot.hbmMarketCapUsdMillions) : "--";
   const nvdaCapLabel = snapshot ? formatCompactUsd(snapshot.nvdaMarketCapUsdMillions) : "--";
   const ratioLabel = formatRatioPercent(snapshot?.ratio || null);
-  const statusLabel = fetchState === "loading" ? "SYNCING..." : isStale ? "STALE" : "LIVE";
+  const activeDataSource: MarketDataSource =
+    snapshot?.dataSource ||
+    (HBM_RATIO_ENDPOINT
+      ? "endpoint"
+      : STOCKDATA_API_TOKEN
+      ? "stockdata"
+      : FINNHUB_API_KEY
+      ? "finnhub"
+      : "public");
+  const usesPublicRegularUsQuote = activeDataSource === "public" && isUsExtendedHours();
+  const statusLabel =
+    fetchState === "loading"
+      ? "SYNCING..."
+      : fetchState === "error"
+      ? "ERROR"
+      : isStale
+      ? "STALE"
+      : usesPublicRegularUsQuote
+      ? "DELAYED"
+      : "LIVE";
   const visibleCompanies = [nvda, ...hbmCompanies].filter(Boolean) as CompanySnapshot[];
   const ratioNumber = ratioLabel.endsWith("%") ? ratioLabel.slice(0, -1) : ratioLabel;
   const ratioFill = snapshot ? Math.max(2, Math.min(100, snapshot.ratio * 100)) : 0;
   const updatedAtLabel = snapshot ? formatClock(new Date(snapshot.updatedAt), "America/New_York") : "--";
+  const dataSourceLabel = activeDataSource === "endpoint"
+    ? "DIRECT ENDPOINT"
+    : activeDataSource === "stockdata"
+    ? "STOCKDATA EXT"
+    : activeDataSource === "finnhub"
+    ? "FINNHUB LIVE"
+    : usesPublicRegularUsQuote
+    ? "PUBLIC CLOSE"
+    : "PUBLIC DATA";
 
   return (
     <div className="hbm-page">
@@ -853,7 +1128,7 @@ export default function HbmNvdaRatioPage() {
         .meta-label,
         .company-symbol,
         .mini-copy,
-        .ribbon-item span {
+        .ribbon-item > span {
           font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
             "Courier New", monospace;
         }
@@ -923,6 +1198,17 @@ export default function HbmNvdaRatioPage() {
 
         .refresh-button.is-loading svg {
           animation: spin 0.8s linear infinite;
+        }
+
+        .flip-value {
+          display: inline-grid;
+          overflow: hidden;
+          vertical-align: bottom;
+        }
+
+        .flip-value > span {
+          display: inline-block;
+          grid-area: 1 / 1;
         }
 
         .main-grid {
@@ -1018,7 +1304,7 @@ export default function HbmNvdaRatioPage() {
           background: var(--paper);
         }
 
-        .aggregate-grid span,
+        .aggregate-grid div > span,
         .meta-label,
         .tile-label {
           display: block;
@@ -1079,7 +1365,7 @@ export default function HbmNvdaRatioPage() {
           overflow: hidden;
         }
 
-        .fraction-part span {
+        .fraction-part > span {
           height: 100%;
           display: grid;
           place-items: center;
@@ -1213,6 +1499,9 @@ export default function HbmNvdaRatioPage() {
           font-size: 1.65rem;
           line-height: 1;
           font-weight: 950;
+          min-height: 1.65rem;
+          white-space: nowrap;
+          overflow: hidden;
         }
 
         .price-row {
@@ -1221,6 +1510,15 @@ export default function HbmNvdaRatioPage() {
           gap: 10px;
           font-size: 0.82rem;
           font-weight: 900;
+          min-width: 0;
+          line-height: 1.1;
+          white-space: nowrap;
+        }
+
+        .price-row > span {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: clip;
         }
 
         .change-up {
@@ -1266,7 +1564,7 @@ export default function HbmNvdaRatioPage() {
           border-right: 0;
         }
 
-        .ribbon-item span {
+        .ribbon-item > span {
           display: block;
           font-size: 0.72rem;
           font-weight: 900;
@@ -1420,12 +1718,12 @@ export default function HbmNvdaRatioPage() {
               <div className="status-line">
                 <span
                   className={`signal-dot ${fetchState === "loading" ? "is-loading" : ""} ${
-                    isStale ? "is-stale" : ""
+                    fetchState === "error" || isStale ? "is-stale" : ""
                   }`}
                 />
                 {statusLabel}
               </div>
-              <div className="source-line">{HBM_RATIO_ENDPOINT ? "DIRECT ENDPOINT" : "YAHOO PROXY"}</div>
+              <div className="source-line">{dataSourceLabel}</div>
             </div>
 
             <button
@@ -1468,7 +1766,7 @@ export default function HbmNvdaRatioPage() {
               transition={{ type: "spring", stiffness: 220, damping: 20 }}
             >
               <div className="ratio-value">
-                {ratioNumber}
+                <FlipValue value={ratioNumber} numericValue={snapshot?.ratio ?? null} />
                 <span className="percent-sign">%</span>
               </div>
             </motion.div>
@@ -1481,11 +1779,21 @@ export default function HbmNvdaRatioPage() {
               <div className="aggregate-grid">
                 <div>
                   <span>HBM aggregate</span>
-                  <strong>{hbmCapLabel}</strong>
+                  <strong>
+                    <FlipValue
+                      value={hbmCapLabel}
+                      numericValue={snapshot?.hbmMarketCapUsdMillions ?? null}
+                    />
+                  </strong>
                 </div>
                 <div>
                   <span>NVIDIA base</span>
-                  <strong>{nvdaCapLabel}</strong>
+                  <strong>
+                    <FlipValue
+                      value={nvdaCapLabel}
+                      numericValue={snapshot?.nvdaMarketCapUsdMillions ?? null}
+                    />
+                  </strong>
                 </div>
               </div>
             </div>
@@ -1498,12 +1806,24 @@ export default function HbmNvdaRatioPage() {
                 <div className="fraction-row">
                   <div className="fraction-part">
                     <span>TOP</span>
-                    <strong>{hbmCapLabel} from Micron, SK hynix, Samsung</strong>
+                    <strong>
+                      <FlipValue
+                        value={hbmCapLabel}
+                        numericValue={snapshot?.hbmMarketCapUsdMillions ?? null}
+                      />{" "}
+                      from Micron, SK hynix, Samsung
+                    </strong>
                   </div>
                   <div className="fraction-line" />
                   <div className="fraction-part">
                     <span>BASE</span>
-                    <strong>{nvdaCapLabel} from NVIDIA</strong>
+                    <strong>
+                      <FlipValue
+                        value={nvdaCapLabel}
+                        numericValue={snapshot?.nvdaMarketCapUsdMillions ?? null}
+                      />{" "}
+                      from NVIDIA
+                    </strong>
                   </div>
                 </div>
               </div>
@@ -1525,7 +1845,9 @@ export default function HbmNvdaRatioPage() {
               </div>
               <div className="data-cell">
                 <span className="meta-label">USD/KRW</span>
-                <strong className="data-value">{snapshot?.usdKrw.toFixed(2) || "--"}</strong>
+                <strong className="data-value">
+                  <FlipValue value={snapshot?.usdKrw.toFixed(2) || "--"} numericValue={snapshot?.usdKrw ?? null} />
+                </strong>
               </div>
             </section>
           </aside>
@@ -1534,7 +1856,7 @@ export default function HbmNvdaRatioPage() {
         <section className="company-deck">
           <div className="deck-header">
             <h2>Bubble constituents</h2>
-            <span className="mini-copy">{pollPlan.isPolling ? "open-market polling" : "waiting for next open"}</span>
+            <span className="mini-copy">{pollPlan.isPolling ? "15-second refresh" : "polling paused"}</span>
           </div>
 
           <div className="company-grid">
@@ -1562,11 +1884,27 @@ export default function HbmNvdaRatioPage() {
                     </div>
 
                     <div>
-                      <div className="cap-value">{formatCompactUsd(company.marketCapUsdMillions)}</div>
+                      <div className="cap-value">
+                        <FlipValue
+                          value={formatCompactUsd(company.marketCapUsdMillions)}
+                          numericValue={company.marketCapUsdMillions}
+                          animate={false}
+                        />
+                      </div>
                       <div className="price-row">
-                        <span>{formatPrice(company.price, company.priceCurrency)}</span>
+                        <span>
+                          <FlipValue
+                            value={formatPrice(company.price, company.priceCurrency)}
+                            numericValue={company.price}
+                            animate={false}
+                          />
+                        </span>
                         <span className={Number(company.changePercent) >= 0 ? "change-up" : "change-down"}>
-                          {formatPercent(company.changePercent)}
+                          <FlipValue
+                            value={formatPercent(company.changePercent)}
+                            numericValue={company.changePercent}
+                            animate={false}
+                          />
                         </span>
                       </div>
                     </div>
@@ -1604,7 +1942,9 @@ export default function HbmNvdaRatioPage() {
           </div>
           <div className="ribbon-item">
             <span>Ratio</span>
-            <strong>{ratioLabel}</strong>
+            <strong>
+              <FlipValue value={ratioLabel} numericValue={snapshot?.ratio ?? null} />
+            </strong>
           </div>
         </footer>
       </div>
