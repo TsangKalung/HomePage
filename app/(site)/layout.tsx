@@ -1,5 +1,4 @@
-import Link from "next/link"
-import "./globals.css"
+import "../globals.css"
 import "katex/dist/katex.min.css"
 import { Inter, Merriweather, Bodoni_Moda } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
