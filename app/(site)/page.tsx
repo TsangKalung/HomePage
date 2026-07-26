@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
   const sortedPosts = useMemo(() => {
-    return [...allPosts].sort((a, b) => {
+    return allPosts.filter((post) => !post.draft).sort((a, b) => {
       return Date.parse(b.date) - Date.parse(a.date);
     });
   }, []);

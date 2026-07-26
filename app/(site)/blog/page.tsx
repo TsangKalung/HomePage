@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function Blog() {
   // 过滤出不包含 translation 类别的文章（即博客文章）
   const blogPosts = useMemo(() => allPosts.filter((post) => 
-    !post.categories || !post.categories.includes("translation")
+    !post.draft && (!post.categories || !post.categories.includes("translation"))
   ), []);
 
   const sortedPosts = useMemo(() => {
@@ -69,4 +69,3 @@ export default function Blog() {
     </div>
   );
 }
-
