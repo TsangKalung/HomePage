@@ -1,6 +1,7 @@
 import { defineDocumentType, makeSource } from "contentlayer/source-files"
 import remarkMath from "remark-math"
 import rehypeKatex from "rehype-katex"
+import rehypeHighlight from "rehype-highlight"
 
 function remarkNormalizeAdmonitions() {
   const map = { tip: "Tip", warning: "Warning", error: "Error", success: "Success" }
@@ -74,6 +75,6 @@ export default makeSource({
   documentTypes: [Post, Page],
   mdx: {
     remarkPlugins: [remarkNormalizeAdmonitions, remarkMath],
-    rehypePlugins: [rehypeKatex],
+    rehypePlugins: [rehypeKatex, [rehypeHighlight, { ignoreMissing: true }]],
   },
 })

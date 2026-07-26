@@ -58,3 +58,59 @@
 .prose a {
   @apply no-underline border-b border-slate-300 dark:border-slate-700 hover:border-black dark:hover:border-white transition-colors duration-200;
 }
+
+.prose :where(:not(pre) > code) {
+  @apply rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 font-mono text-[0.88em] font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100;
+}
+
+.prose :where(:not(pre) > code)::before,
+.prose :where(:not(pre) > code)::after {
+  content: none;
+}
+
+.prose pre code.hljs {
+  color: #d6deeb;
+}
+
+.prose pre code.hljs .hljs-keyword,
+.prose pre code.hljs .hljs-selector-tag,
+.prose pre code.hljs .hljs-literal {
+  color: #c792ea;
+}
+
+.prose pre code.hljs .hljs-title,
+.prose pre code.hljs .hljs-title.function_,
+.prose pre code.hljs .hljs-section {
+  color: #82aaff;
+}
+
+.prose pre code.hljs .hljs-string,
+.prose pre code.hljs .hljs-attr,
+.prose pre code.hljs .hljs-template-variable {
+  color: #ecc48d;
+}
+
+.prose pre code.hljs .hljs-number,
+.prose pre code.hljs .hljs-built_in,
+.prose pre code.hljs .hljs-symbol,
+.prose pre code.hljs .hljs-bullet {
+  color: #f78c6c;
+}
+
+.prose pre code.hljs .hljs-comment,
+.prose pre code.hljs .hljs-quote {
+  color: #7f8c98;
+  font-style: italic;
+}
+
+.prose pre code.hljs .hljs-variable,
+.prose pre code.hljs .hljs-params,
+.prose pre code.hljs .hljs-property,
+.prose pre code.hljs .hljs-name {
+  color: #addb67;
+}
+
+.prose pre code.hljs .hljs-type,
+.prose pre code.hljs .hljs-class .hljs-title {
+  color: #ffcb6b;
+}
