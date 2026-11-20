@@ -1,0 +1,58 @@
+content/posts/johnston-atoll.mdx
+  s_1daea100b3f93f::t_888df7ee8bc9cd 156-165
+  s_1daea100b3f93f::t_e4dc6a8ca17518 225
+  s_1daea100b3f93f::t_c396856eee6008 227
+  s_1daea100b3f93f::t_0cecf304f066be 262-263,266-273,275
+  s_1daea100b3f93f::t_70daa6eb79f871 213-219,221-222
+  s_1daea100b3f93f::t_54a771601ca33c 309-317
+  s_1daea100b3f93f::t_87a8b83712a99e 390-399
+  s_1daea100b3f93f::t_12fe42b2fa5eb8 32-36
+  s_1daea100b3f93f::t_d627c4fcd0604e 276-285
+  s_1daea100b3f93f::t_9d4c8edce8bed4 355-362
+  s_1daea100b3f93f::t_8b3073d4b4fdc3 78-87
+  s_1daea100b3f93f::t_6d6a6fc9ac653a 352
+  s_1daea100b3f93f::t_c696a97ed75dec 353-354,364
+  s_1daea100b3f93f::t_2dc8a5eef472f5 28,31
+  s_1daea100b3f93f::t_8eebebb47c828e 172
+  s_1daea100b3f93f::t_49a2fb22bf92bc 153,155,166-169
+  s_1daea100b3f93f::t_fe4f8f2dd51038 125,128-136
+  s_1daea100b3f93f::t_6b6f5adb0c7f36 170-171,173-183
+  s_1daea100b3f93f::t_f6a95201957e99 325-330
+  s_1daea100b3f93f::t_1aaa867c05610e 400-409
+  s_1daea100b3f93f::t_1dd4d052818b78 290-299
+  s_1daea100b3f93f::t_7e232c18f7a8b6 200-202,204-206,208-209
+  s_1daea100b3f93f::t_2a78c8c5c9dc29 58-64,66-67
+  s_1daea100b3f93f::t_b542e18ed39b47 242
+  s_1daea100b3f93f::t_1c594015f08f1c 98-107
+  h_5f628548da3bd5 8,10-12,14-22,29-30,37-47,88,90-97,108-118,120-124,126-127,137-141,152,154,184-199,203,207,210-212,220,223-224,226,228,239-241,243-259,261,264-265,274,286-289,300-301,303-308,318-324,331-351,363,365-389,420-423
+  s_1daea100b3f93f::t_53f8439803e4d6 142-151
+  s_1daea100b3f93f::t_720f42f799d6e4 1-7,9,13,23-27
+  s_1daea100b3f93f::t_abd766ef4fac73 260
+  s_1daea100b3f93f::t_63bcac64eb8622 302
+  s_1daea100b3f93f::t_719b5c17edfa8f 229-238
+  s_1daea100b3f93f::t_8adf5c92398929 410-416,418-419
+  s_1daea100b3f93f::t_8e63bfce0100de 65
+  s_1daea100b3f93f::t_5c069fb3f95e2b 68-70,75-77
+  s_1daea100b3f93f::t_4a0a53ec41dd95 417
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "22b4b75aa303f996a407d0a28870f2ecbc6485d2",
+  "prompts": {},
+  "humans": {
+    "h_5f628548da3bd5": {
+      "author": "jialong.zeng <jialong.zeng@zoom.us>"
+    }
+  },
+  "sessions": {
+    "s_1daea100b3f93f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6d64c7f-414d-4a0a-b25a-15ae47281d36",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "jialong.zeng <jialong.zeng@zoom.us>"
+    }
+  }
+}
